@@ -20,11 +20,6 @@ class Donation(models.Model):
     )
     timestamp = models.DateTimeField(auto_now_add=True)
     stripe_payment_id = models.CharField(max_length=255, unique=True)
-
-    # Not applicable when user is null — anonymous donations never appear on
-    # the leaderboard regardless (PRD Section 10b).
-    display_consent = models.BooleanField(default=True)
-
     guest_email = models.EmailField(null=True, blank=True)
 
     def __str__(self):
