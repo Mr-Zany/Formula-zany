@@ -55,6 +55,7 @@ class UserAdmin(BaseUserAdmin):
                 "fields": (
                     "last_name_change",
                     "last_picture_change",
+                    "last_full_name_change",
                     "moderation_reset_at",
                 )
             },

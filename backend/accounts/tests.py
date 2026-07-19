@@ -96,14 +96,73 @@ class ProfileViewTests(TestCase):
         self.assertTrue(self.user.disable_live_notifications)
         self.assertTrue(self.user.disable_away_notifications)
 
-    def test_full_name_and_newsletter_are_read_only(self):
+    def test_newsletter_opt_in_updates_freely(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.patch(
+            "/api/profile/", {"newsletter_opt_in": True}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.newsletter_opt_in)
+
+    def test_full_name_change_rejected_without_confirmation(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.patch(
+            "/api/profile/", {"full_name": "New Real Name"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("confirm_full_name_change", resp.json())
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.full_name, "Profile User")
+
+    def test_full_name_change_allowed_with_confirmation(self):
         self.client.force_authenticate(user=self.user)
         resp = self.client.patch(
             "/api/profile/",
-            {"full_name": "Hacked Name", "newsletter_opt_in": True},
+            {"full_name": "New Real Name", "confirm_full_name_change": True},
             format="json",
         )
         self.assertEqual(resp.status_code, 200)
         self.user.refresh_from_db()
+        self.assertEqual(self.user.full_name, "New Real Name")
+        self.assertIsNotNone(self.user.last_full_name_change)
+
+    def test_full_name_change_blocked_within_ninety_days_even_when_confirmed(self):
+        self.user.last_full_name_change = timezone.now() - timedelta(days=30)
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.patch(
+            "/api/profile/",
+            {"full_name": "Another Name", "confirm_full_name_change": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.user.refresh_from_db()
         self.assertEqual(self.user.full_name, "Profile User")
-        self.assertFalse(self.user.newsletter_opt_in)
+
+    def test_full_name_change_allowed_within_grace_window(self):
+        original_time = timezone.now() - timedelta(minutes=5)
+        self.user.last_full_name_change = original_time
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.patch(
+            "/api/profile/",
+            {"full_name": "Fixed Typo Name", "confirm_full_name_change": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.full_name, "Fixed Typo Name")
+        # Grace-window correction must NOT reset the 90-day clock.
+        self.assertEqual(self.user.last_full_name_change, original_time)
+
+    def test_full_name_change_allowed_after_ninety_days(self):
+        self.user.last_full_name_change = timezone.now() - timedelta(days=91)
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.patch(
+            "/api/profile/",
+            {"full_name": "Fresh Real Name", "confirm_full_name_change": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)

@@ -59,10 +59,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=NameDisplayPref.FULL_NAME,
     )
 
-    # Original-change timestamps for the 2-week name/photo change cycle (PRD 7b).
-    # A correction within the 20-minute grace window does not update these.
+    # Original-change timestamps for the display-name/photo/full-name change
+    # cooldowns (PRD 7b, and the full-name cooldown added on top of it). A
+    # correction within the 20-minute grace window does not update these.
     last_name_change = models.DateTimeField(null=True, blank=True)
     last_picture_change = models.DateTimeField(null=True, blank=True)
+    last_full_name_change = models.DateTimeField(null=True, blank=True)
 
     newsletter_opt_in = models.BooleanField(default=False)
     tos_accepted_at = models.DateTimeField(null=True, blank=True)
