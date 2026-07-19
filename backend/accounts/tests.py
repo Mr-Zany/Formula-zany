@@ -105,36 +105,27 @@ class ProfileViewTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.newsletter_opt_in)
 
-    def test_full_name_change_rejected_without_confirmation(self):
+    def test_get_includes_full_name_change_notice(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.get("/api/profile/")
+        self.assertIn("90 days", resp.json()["full_name_change_notice"])
+
+    def test_full_name_change_allowed_with_no_confirmation_needed(self):
         self.client.force_authenticate(user=self.user)
         resp = self.client.patch(
             "/api/profile/", {"full_name": "New Real Name"}, format="json"
-        )
-        self.assertEqual(resp.status_code, 400)
-        self.assertIn("confirm_full_name_change", resp.json())
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.full_name, "Profile User")
-
-    def test_full_name_change_allowed_with_confirmation(self):
-        self.client.force_authenticate(user=self.user)
-        resp = self.client.patch(
-            "/api/profile/",
-            {"full_name": "New Real Name", "confirm_full_name_change": True},
-            format="json",
         )
         self.assertEqual(resp.status_code, 200)
         self.user.refresh_from_db()
         self.assertEqual(self.user.full_name, "New Real Name")
         self.assertIsNotNone(self.user.last_full_name_change)
 
-    def test_full_name_change_blocked_within_ninety_days_even_when_confirmed(self):
+    def test_full_name_change_blocked_within_ninety_days(self):
         self.user.last_full_name_change = timezone.now() - timedelta(days=30)
         self.user.save()
         self.client.force_authenticate(user=self.user)
         resp = self.client.patch(
-            "/api/profile/",
-            {"full_name": "Another Name", "confirm_full_name_change": True},
-            format="json",
+            "/api/profile/", {"full_name": "Another Name"}, format="json"
         )
         self.assertEqual(resp.status_code, 400)
         self.user.refresh_from_db()
@@ -146,9 +137,7 @@ class ProfileViewTests(TestCase):
         self.user.save()
         self.client.force_authenticate(user=self.user)
         resp = self.client.patch(
-            "/api/profile/",
-            {"full_name": "Fixed Typo Name", "confirm_full_name_change": True},
-            format="json",
+            "/api/profile/", {"full_name": "Fixed Typo Name"}, format="json"
         )
         self.assertEqual(resp.status_code, 200)
         self.user.refresh_from_db()
@@ -161,8 +150,6 @@ class ProfileViewTests(TestCase):
         self.user.save()
         self.client.force_authenticate(user=self.user)
         resp = self.client.patch(
-            "/api/profile/",
-            {"full_name": "Fresh Real Name", "confirm_full_name_change": True},
-            format="json",
+            "/api/profile/", {"full_name": "Fresh Real Name"}, format="json"
         )
         self.assertEqual(resp.status_code, 200)

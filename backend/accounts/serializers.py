@@ -10,6 +10,11 @@ NAME_PICTURE_CHANGE_COOLDOWN = timezone.timedelta(days=14)
 FULL_NAME_CHANGE_COOLDOWN = timezone.timedelta(days=90)
 CHANGE_GRACE_WINDOW = timezone.timedelta(minutes=20)
 
+FULL_NAME_CHANGE_NOTICE = (
+    "Your full name must be your real name per our Terms of Service. "
+    "You can change it once every 90 days."
+)
+
 
 def check_rate_limit(last_change_at, now, cooldown=NAME_PICTURE_CHANGE_COOLDOWN):
     """
@@ -45,14 +50,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     on_car = serializers.SerializerMethodField()
     sponsor_tier = serializers.SerializerMethodField()
 
-    # Write-only, not persisted -- must be explicitly true whenever full_name
-    # actually changes (see validate() below). Mirrors the ToS-checkbox gate
-    # already used for anonymous donations (Section 2): a real name change
-    # is consequential enough to require an explicit acknowledgment, not
-    # just a passive warning a frontend could forget to show.
-    confirm_full_name_change = serializers.BooleanField(
-        write_only=True, required=False, default=False
-    )
+    # Static informational text for the frontend to show next to the
+    # full_name field -- not a confirmation gate, just a heads-up about the
+    # real-name requirement and the 90-day cooldown before it's submitted.
+    full_name_change_notice = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -71,7 +72,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "last_name_change",
             "last_picture_change",
             "last_full_name_change",
-            "confirm_full_name_change",
+            "full_name_change_notice",
             "referral_code",
             "referral_url",
             "points",
@@ -84,9 +85,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         # id/email/email_verified stay fixed here: account identity fields
         # not exposed anywhere in the Profile Settings panel (Section 7).
         # full_name and newsletter_opt_in ARE writable -- full_name through
-        # its own rate-limited, confirmation-gated path below; newsletter
-        # opt-out also still works via the email's own unsubscribe link
-        # (CAN-SPAM), this is just an additional in-app path for it.
+        # its own rate-limited path below (see full_name_change_notice for
+        # the accompanying warning text); newsletter opt-out also still
+        # works via the email's own unsubscribe link (CAN-SPAM), this is
+        # just an additional in-app path for it.
         read_only_fields = [
             "id",
             "email",
@@ -136,6 +138,9 @@ class ProfileSerializer(serializers.ModelSerializer):
             return None
         return f"{settings.FRONTEND_URL}/?ref={obj.id}"
 
+    def get_full_name_change_notice(self, obj):
+        return FULL_NAME_CHANGE_NOTICE
+
     def validate_full_name(self, value):
         user = self.instance
         if value == user.full_name:
@@ -146,21 +151,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         if not allowed:
             raise serializers.ValidationError(error)
         return value
-
-    def validate(self, attrs):
-        if "full_name" in attrs and attrs["full_name"] != self.instance.full_name:
-            if not attrs.get("confirm_full_name_change"):
-                raise serializers.ValidationError(
-                    {
-                        "confirm_full_name_change": (
-                            "Changing your full name requires confirmation: it must "
-                            "be your real name per our Terms of Service, and you "
-                            "won't be able to change it again for 90 days. Set "
-                            "confirm_full_name_change=true to proceed."
-                        )
-                    }
-                )
-        return attrs
 
     def validate_display_name(self, value):
         user = self.instance
@@ -182,7 +172,6 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         now = timezone.now()
-        validated_data.pop("confirm_full_name_change", None)
 
         if (
             "display_name" in validated_data
