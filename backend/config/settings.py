@@ -42,11 +42,21 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "accounts",
     "donations",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -133,3 +143,18 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Formula Zany project settings
+
+# Blank until a real Stripe test-mode account exists (PRD Section 10d, Step 7).
+# The /api/donate/ endpoint checks for this and returns a clear 503 if unset,
+# rather than the raw stripe library error.
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+
+# Where Stripe Checkout redirects back to after payment (success/cancel URLs).
+# No React app exists yet (Step 6) — defaults to a local placeholder.
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
+# $150,000 build goal (PRD Section 2c).
+FUNDING_GOAL_CENTS = 15_000_000

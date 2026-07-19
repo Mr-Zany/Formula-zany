@@ -92,3 +92,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+    def public_name(self):
+        """The name shown on the leaderboard, per this user's own display preference (Section 7)."""
+        if self.name_display_pref == NameDisplayPref.DISPLAY_NAME and self.display_name:
+            return self.display_name
+        return self.full_name

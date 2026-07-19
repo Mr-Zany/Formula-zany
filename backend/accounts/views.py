@@ -1,3 +1,13 @@
-from django.shortcuts import render
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.permissions import IsAuthenticated
 
-# Create your views here.
+from .serializers import ProfileSerializer
+
+
+class ProfileView(RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileSerializer
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_object(self):
+        return self.request.user
