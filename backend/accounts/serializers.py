@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -208,3 +209,60 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Sign-up steps 1-5 from PRD Section 6 (verification email is sent
+    separately by the view, step 6, once the account exists). full_name is
+    required (real-name ToS requirement); display_name and
+    profile_picture_url are optional, matching the sign-up form.
+    """
+
+    password = serializers.CharField(write_only=True, style={"input_type": "password"})
+    # Forced checkboxes -- Sign Up isn't clickable without both (Section 6).
+    tos_accepted = serializers.BooleanField(write_only=True)
+    age_confirmed = serializers.BooleanField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "email",
+            "password",
+            "full_name",
+            "display_name",
+            "profile_picture_url",
+            "newsletter_opt_in",
+            "tos_accepted",
+            "age_confirmed",
+        ]
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
+
+    def validate_tos_accepted(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "You must accept the Terms of Service to sign up."
+            )
+        return value
+
+    def validate_age_confirmed(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "You must confirm you are 13 years of age or older to sign up."
+            )
+        return value
+
+    def create(self, validated_data):
+        validated_data.pop("tos_accepted")
+        validated_data.pop("age_confirmed")
+        password = validated_data.pop("password")
+        now = timezone.now()
+        return User.objects.create_user(
+            password=password,
+            tos_accepted_at=now,
+            age_confirmed_at=now,
+            **validated_data,
+        )

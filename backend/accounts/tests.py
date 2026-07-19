@@ -1,18 +1,23 @@
 from datetime import timedelta
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from accounts.emails import generate_verification_token
 from accounts.models import User
 
 
 class ProfileViewTests(TestCase):
     def setUp(self):
+        # Verified by default: most of this class tests PATCH mechanics,
+        # which Section 6a locks behind email verification. The unverified
+        # case gets its own dedicated tests below.
         self.user = User.objects.create_user(
             email="profile@example.com",
             password="testpass123",
             full_name="Profile User",
+            email_verified=True,
         )
         self.client = APIClient()
 
@@ -28,16 +33,29 @@ class ProfileViewTests(TestCase):
         self.assertEqual(data["email"], "profile@example.com")
         self.assertEqual(data["points"], 0)
         self.assertEqual(data["tier"], "unranked")
-        self.assertIsNone(data["referral_code"])
+        self.assertEqual(data["referral_code"], str(self.user.id))
 
-    def test_referral_code_active_once_verified(self):
-        self.user.email_verified = True
-        self.user.save()
-        self.client.force_authenticate(user=self.user)
+    def test_referral_code_none_when_not_verified(self):
+        unverified = User.objects.create_user(
+            email="unverified-referral@example.com",
+            password="x",
+            full_name="Unverified",
+        )
+        self.client.force_authenticate(user=unverified)
         resp = self.client.get("/api/profile/")
         data = resp.json()
-        self.assertEqual(data["referral_code"], str(self.user.id))
-        self.assertIn(f"?ref={self.user.id}", data["referral_url"])
+        self.assertIsNone(data["referral_code"])
+        self.assertIsNone(data["referral_url"])
+
+    def test_patch_blocked_when_not_verified(self):
+        unverified = User.objects.create_user(
+            email="unverified-patch@example.com", password="x", full_name="Unverified"
+        )
+        self.client.force_authenticate(user=unverified)
+        resp = self.client.patch(
+            "/api/profile/", {"display_name": "Nope"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 403)
 
     def test_patch_display_name_sets_rate_limit_timestamp(self):
         self.client.force_authenticate(user=self.user)
@@ -153,3 +171,151 @@ class ProfileViewTests(TestCase):
             "/api/profile/", {"full_name": "Fresh Real Name"}, format="json"
         )
         self.assertEqual(resp.status_code, 200)
+
+
+VALID_REGISTRATION = {
+    "email": "newuser@example.com",
+    "password": "a-genuinely-strong-passphrase-42",
+    "full_name": "New User",
+    "tos_accepted": True,
+    "age_confirmed": True,
+}
+
+
+class RegisterViewTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    @override_settings(DEBUG=True)
+    def test_register_creates_unverified_account_and_exposes_link_in_debug(self):
+        resp = self.client.post(
+            "/api/auth/register/", VALID_REGISTRATION, format="json"
+        )
+        self.assertEqual(resp.status_code, 201)
+        user = User.objects.get(email="newuser@example.com")
+        self.assertFalse(user.email_verified)
+        self.assertIsNotNone(user.tos_accepted_at)
+        self.assertIsNotNone(user.age_confirmed_at)
+        self.assertTrue(user.check_password(VALID_REGISTRATION["password"]))
+        self.assertIn("verification_url", resp.json())
+
+    @override_settings(DEBUG=False)
+    def test_verification_url_not_exposed_outside_debug(self):
+        resp = self.client.post(
+            "/api/auth/register/", VALID_REGISTRATION, format="json"
+        )
+        self.assertEqual(resp.status_code, 201)
+        self.assertNotIn("verification_url", resp.json())
+
+    def test_register_requires_tos_acceptance(self):
+        payload = {**VALID_REGISTRATION, "tos_accepted": False}
+        resp = self.client.post("/api/auth/register/", payload, format="json")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("tos_accepted", resp.json())
+
+    def test_register_requires_age_confirmation(self):
+        payload = {**VALID_REGISTRATION, "age_confirmed": False}
+        resp = self.client.post("/api/auth/register/", payload, format="json")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("age_confirmed", resp.json())
+
+    def test_register_rejects_weak_password(self):
+        payload = {**VALID_REGISTRATION, "password": "password"}
+        resp = self.client.post("/api/auth/register/", payload, format="json")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("password", resp.json())
+
+    def test_register_rejects_duplicate_email(self):
+        User.objects.create_user(
+            email="newuser@example.com", password="x", full_name="Existing"
+        )
+        resp = self.client.post(
+            "/api/auth/register/", VALID_REGISTRATION, format="json"
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("email", resp.json())
+
+
+class VerifyEmailViewTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email="verifyme@example.com", password="x", full_name="Verify Me"
+        )
+
+    def test_valid_token_verifies_account(self):
+        token = generate_verification_token(self.user)
+        resp = self.client.post(
+            "/api/auth/verify-email/", {"token": token}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.email_verified)
+
+    def test_garbage_token_rejected(self):
+        resp = self.client.post(
+            "/api/auth/verify-email/", {"token": "not-a-real-token"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.email_verified)
+
+    def test_missing_token_rejected(self):
+        resp = self.client.post("/api/auth/verify-email/", {}, format="json")
+        self.assertEqual(resp.status_code, 400)
+
+
+class JWTAuthTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email="jwt@example.com",
+            password="testpass123",
+            full_name="JWT User",
+            email_verified=True,
+        )
+
+    def test_login_with_email_and_password_returns_tokens(self):
+        resp = self.client.post(
+            "/api/auth/token/",
+            {"email": "jwt@example.com", "password": "testpass123"},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertIn("access", data)
+        self.assertIn("refresh", data)
+
+    def test_login_with_wrong_password_rejected(self):
+        resp = self.client.post(
+            "/api/auth/token/",
+            {"email": "jwt@example.com", "password": "wrong"},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 401)
+
+    def test_refresh_returns_new_access_token(self):
+        login_resp = self.client.post(
+            "/api/auth/token/",
+            {"email": "jwt@example.com", "password": "testpass123"},
+            format="json",
+        )
+        refresh_token = login_resp.json()["refresh"]
+        resp = self.client.post(
+            "/api/auth/token/refresh/", {"refresh": refresh_token}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("access", resp.json())
+
+    def test_access_token_authenticates_profile_request(self):
+        login_resp = self.client.post(
+            "/api/auth/token/",
+            {"email": "jwt@example.com", "password": "testpass123"},
+            format="json",
+        )
+        access_token = login_resp.json()["access"]
+        resp = self.client.get(
+            "/api/profile/", HTTP_AUTHORIZATION=f"Bearer {access_token}"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["email"], "jwt@example.com")
