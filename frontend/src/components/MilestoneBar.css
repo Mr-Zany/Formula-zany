@@ -49,24 +49,26 @@
 }
 
 .milestone-bar__list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 14px;
+  display: flex;
+  justify-content: center;
 }
 
 .milestone-bar__item {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  opacity: 0.55;
-}
-
-.milestone-bar__item.is-reached {
-  opacity: 1;
 }
 
 .milestone-bar__icon {
   font-size: 18px;
+}
+
+.milestone-bar__current-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 700;
 }
 
 .milestone-bar__item-label {

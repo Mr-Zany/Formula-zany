@@ -5,10 +5,12 @@ function formatDollars(cents) {
   return `$${Math.round(cents / 100).toLocaleString()}`;
 }
 
-// Section 2c: progress bar with divider ticks, a small icon per milestone,
-// and a one-line status underneath each. Milestone amounts/descriptions
-// are placeholders (see src/data/milestones.js) pending the real spec
-// sheet -- structure and "fully funded" behavior are real.
+// Section 2c: progress bar with divider ticks, plus the single milestone
+// currently being worked on underneath -- not every milestone, since the
+// About Us page's Project Plan Stepper (4c) already walks through every
+// build stage in full; repeating the whole list here would be redundant.
+// Milestone amounts/descriptions are placeholders (see src/data/milestones.js)
+// pending the real spec sheet -- structure and "fully funded" behavior are real.
 export default function MilestoneBar({ totalRaisedCents, fundingGoalCents, loading }) {
   if (loading || totalRaisedCents == null || fundingGoalCents == null) {
     return (
@@ -20,6 +22,7 @@ export default function MilestoneBar({ totalRaisedCents, fundingGoalCents, loadi
 
   const fullyFunded = totalRaisedCents >= fundingGoalCents;
   const percent = Math.min(100, (totalRaisedCents / fundingGoalCents) * 100);
+  const currentMilestone = MILESTONES.find((m) => totalRaisedCents < m.thresholdCents);
 
   return (
     <div className="milestone-bar">
@@ -50,24 +53,22 @@ export default function MilestoneBar({ totalRaisedCents, fundingGoalCents, loadi
             })}
           </div>
 
-          <div className="milestone-bar__list">
-            {MILESTONES.map((m) => {
-              const reached = totalRaisedCents >= m.thresholdCents;
-              return (
-                <div key={m.label} className={`milestone-bar__item ${reached ? "is-reached" : ""}`}>
-                  <span className="milestone-bar__icon" aria-hidden="true">
-                    {m.icon}
-                  </span>
-                  <div>
-                    <div className="milestone-bar__item-label">
-                      {m.label} — {formatDollars(m.thresholdCents)}
-                    </div>
-                    <div className="milestone-bar__item-status">{m.status}</div>
+          {currentMilestone && (
+            <div className="milestone-bar__list">
+              <div className="milestone-bar__item">
+                <span className="milestone-bar__icon" aria-hidden="true">
+                  {currentMilestone.icon}
+                </span>
+                <div>
+                  <div className="milestone-bar__current-label">Current goal</div>
+                  <div className="milestone-bar__item-label">
+                    {currentMilestone.label} — {formatDollars(currentMilestone.thresholdCents)}
                   </div>
+                  <div className="milestone-bar__item-status">{currentMilestone.status}</div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
