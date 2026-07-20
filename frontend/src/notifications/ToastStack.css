@@ -1,13 +1,17 @@
 .toast-stack {
   position: fixed;
-  top: 72px;
-  right: var(--edge-margin, 24px);
+  top: 66px;
+  /* Matches .site-header's own right padding (Header.css) so the stack
+     sits directly under the avatar/login button, not out near the
+     --edge-margin gutter -- that variable is for full-bleed sections, not
+     this. */
+  right: 24px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 360px;
-  max-width: calc(100vw - 2 * var(--edge-margin, 24px));
+  max-width: calc(100vw - 32px);
 }
 
 .toast {
@@ -99,10 +103,10 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .toast-stack {
     width: auto;
-    left: var(--edge-margin, 24px);
-    right: var(--edge-margin, 24px);
+    left: 12px;
+    right: 12px;
   }
 }
