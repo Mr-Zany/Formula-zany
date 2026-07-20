@@ -7,11 +7,10 @@ import PhotoEditor from "./PhotoEditor";
 import "./ProfileSettingsModal.css";
 
 export default function ProfileSettingsModal({ onClose }) {
-  const { user, updateProfile, logout } = useAuth();
+  const { user, updateProfile, uploadProfilePhoto, logout } = useAuth();
   const { pushNotification } = useNotifications();
 
   const [photoEditorOpen, setPhotoEditorOpen] = useState(false);
-  const [localPreviewUrl, setLocalPreviewUrl] = useState(null);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   const [fullName, setFullName] = useState(user.full_name);
@@ -88,7 +87,7 @@ export default function ProfileSettingsModal({ onClose }) {
     onClose();
   }
 
-  const avatarSrc = localPreviewUrl || user.profile_picture_url;
+  const avatarSrc = user.profile_picture_url;
   const initial = user.full_name?.trim()?.[0]?.toUpperCase() || "?";
 
   return (
@@ -205,9 +204,15 @@ export default function ProfileSettingsModal({ onClose }) {
         <Modal onClose={() => setPhotoEditorOpen(false)} labelledBy="photo-editor-title">
           <PhotoEditor
             onCancel={() => setPhotoEditorOpen(false)}
-            onSubmit={(dataUrl) => {
-              setLocalPreviewUrl(dataUrl);
-              setPhotoEditorOpen(false);
+            onSubmit={async (dataUrl) => {
+              try {
+                await uploadProfilePhoto(dataUrl);
+                pushNotification("profile_picture_success");
+                setPhotoEditorOpen(false);
+              } catch (err) {
+                pushNotification("profile_picture_failed");
+                throw err;
+              }
             }}
           />
         </Modal>

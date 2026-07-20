@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
@@ -5,7 +7,9 @@ from rest_framework import serializers
 
 from donations.selectors import apply_rank_notification_flags, compute_leaderboard
 
-from .models import Rank, User
+from .models import Rank, TosVersion, User
+
+IMAGE_DATA_URL_RE = re.compile(r"^data:image/(png|jpeg|jpg|webp);base64,")
 
 NAME_PICTURE_CHANGE_COOLDOWN = timezone.timedelta(days=14)
 FULL_NAME_CHANGE_COOLDOWN = timezone.timedelta(days=90)
@@ -62,6 +66,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     # real-name requirement and the 90-day cooldown before it's submitted.
     full_name_change_notice = serializers.SerializerMethodField()
 
+    # Section 5c: true whenever the Terms materially changed (admin bumped
+    # TosVersion) since this user last agreed -- triggers the blocking
+    # re-consent pop-up.
+    needs_tos_reconsent = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -80,6 +89,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "last_picture_change",
             "last_full_name_change",
             "full_name_change_notice",
+            "needs_tos_reconsent",
             "moderation_reset_at",
             "referral_code",
             "referral_url",
@@ -163,6 +173,9 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_full_name_change_notice(self, obj):
         return FULL_NAME_CHANGE_NOTICE
+
+    def get_needs_tos_reconsent(self, obj):
+        return obj.tos_accepted_version < TosVersion.current()
 
     def validate_full_name(self, value):
         user = self.instance
@@ -285,6 +298,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return User.objects.create_user(
             password=password,
             tos_accepted_at=now,
+            tos_accepted_version=TosVersion.current(),
             age_confirmed_at=now,
             **validated_data,
         )
@@ -297,3 +311,20 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
     new_password = serializers.CharField(write_only=True, style={"input_type": "password"})
+
+
+class PhotoUploadSerializer(serializers.Serializer):
+    """
+    Section 7b: the photo editor's cropped canvas render, sent as a data
+    URL. Only the format is validated here -- decoding, real image
+    verification, and size limits happen in the view via Pillow, since a
+    malformed/oversized/non-image payload needs to be caught before
+    anything gets written to disk.
+    """
+
+    image = serializers.CharField()
+
+    def validate_image(self, value):
+        if not IMAGE_DATA_URL_RE.match(value):
+            raise serializers.ValidationError("Expected a PNG/JPEG/WebP data URL.")
+        return value

@@ -81,9 +81,36 @@ export function AuthProvider({ children }) {
     return profile;
   }, []);
 
+  // Section 5c: "Agree to Continue" on the ToS re-consent pop-up.
+  const acceptTos = useCallback(async () => {
+    const profile = await apiFetch("/accounts/tos/accept/", { method: "POST" });
+    setUser(profile);
+    return profile;
+  }, []);
+
+  // Section 7b: the photo editor's real upload path.
+  const uploadProfilePhoto = useCallback(async (dataUrl) => {
+    const profile = await apiFetch("/profile/photo/", {
+      method: "POST",
+      body: { image: dataUrl },
+    });
+    setUser(profile);
+    return profile;
+  }, []);
+
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, updateProfile, refreshProfile }),
-    [user, loading, login, register, logout, updateProfile, refreshProfile]
+    () => ({
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      updateProfile,
+      refreshProfile,
+      acceptTos,
+      uploadProfilePhoto,
+    }),
+    [user, loading, login, register, logout, updateProfile, refreshProfile, acceptTos, uploadProfilePhoto]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

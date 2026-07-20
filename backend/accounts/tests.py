@@ -1,14 +1,26 @@
+import base64
+import io
+import shutil
+import tempfile
 import time
 from datetime import timedelta
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from django.utils import timezone
+from PIL import Image
 from rest_framework.test import APIClient
 
 from accounts.emails import generate_reset_token, generate_verification_token
-from accounts.models import User
+from accounts.models import TosVersion, User
 from donations.models import Donation
+
+
+def _png_data_url(size=(50, 50), color=(200, 30, 30)):
+    buffer = io.BytesIO()
+    Image.new("RGB", size, color).save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode()
+    return f"data:image/png;base64,{encoded}"
 
 
 class ProfileViewTests(TestCase):
@@ -438,3 +450,131 @@ class PasswordResetTests(TestCase):
         self.assertEqual(second.status_code, 400)
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("a-genuinely-strong-passphrase-99"))
+
+
+class TosReconsentTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email="tos@example.com", password="x", full_name="Tos User", email_verified=True
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_new_signup_matches_current_version_no_reconsent_needed(self):
+        resp = self.client.post("/api/auth/register/", VALID_REGISTRATION, format="json")
+        self.assertEqual(resp.status_code, 201)
+        user = User.objects.get(email=VALID_REGISTRATION["email"])
+        self.assertEqual(user.tos_accepted_version, TosVersion.current())
+
+    def test_needs_reconsent_false_by_default(self):
+        resp = self.client.get("/api/profile/")
+        self.assertFalse(resp.json()["needs_tos_reconsent"])
+
+    def test_bumping_version_flags_existing_user(self):
+        tos = TosVersion.objects.create(pk=1, version=2)
+        resp = self.client.get("/api/profile/")
+        self.assertTrue(resp.json()["needs_tos_reconsent"])
+        self.assertEqual(TosVersion.current(), tos.version)
+
+    def test_accept_clears_the_flag(self):
+        TosVersion.objects.create(pk=1, version=2)
+        resp = self.client.post("/api/accounts/tos/accept/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(resp.json()["needs_tos_reconsent"])
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.tos_accepted_version, 2)
+        self.assertIsNotNone(self.user.tos_accepted_at)
+
+    def test_accept_not_blocked_by_unverified_email(self):
+        unverified = User.objects.create_user(
+            email="tos-unverified@example.com", password="x", full_name="Unverified"
+        )
+        TosVersion.objects.create(pk=1, version=2)
+        client = APIClient()
+        client.force_authenticate(user=unverified)
+        resp = client.post("/api/accounts/tos/accept/")
+        self.assertEqual(resp.status_code, 200)
+
+    def test_accept_requires_authentication(self):
+        client = APIClient()
+        resp = client.post("/api/accounts/tos/accept/")
+        self.assertIn(resp.status_code, (401, 403))
+
+
+class ProfilePhotoUploadTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._media_dir = tempfile.mkdtemp()
+        cls._media_override = override_settings(MEDIA_ROOT=cls._media_dir)
+        cls._media_override.enable()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._media_override.disable()
+        shutil.rmtree(cls._media_dir, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email="photo@example.com", password="x", full_name="Photo User", email_verified=True
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_upload_stores_file_and_updates_url(self):
+        resp = self.client.post(
+            "/api/profile/photo/", {"image": _png_data_url()}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertIsNotNone(data["profile_picture_url"])
+        self.assertIn("/media/profile_pictures/", data["profile_picture_url"])
+        self.user.refresh_from_db()
+        self.assertIsNotNone(self.user.last_picture_change)
+
+    def test_upload_blocked_when_not_verified(self):
+        unverified = User.objects.create_user(
+            email="photo-unverified@example.com", password="x", full_name="Unverified"
+        )
+        client = APIClient()
+        client.force_authenticate(user=unverified)
+        resp = client.post("/api/profile/photo/", {"image": _png_data_url()}, format="json")
+        self.assertEqual(resp.status_code, 403)
+
+    def test_upload_rejects_non_image_payload(self):
+        fake = "data:image/png;base64," + base64.b64encode(b"not a real image").decode()
+        resp = self.client.post("/api/profile/photo/", {"image": fake}, format="json")
+        self.assertEqual(resp.status_code, 400)
+
+    def test_upload_rejects_bad_data_url_format(self):
+        resp = self.client.post(
+            "/api/profile/photo/", {"image": "not-a-data-url"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 400)
+
+    def test_second_upload_blocked_within_two_weeks(self):
+        first = self.client.post(
+            "/api/profile/photo/", {"image": _png_data_url()}, format="json"
+        )
+        self.assertEqual(first.status_code, 200)
+
+        # Outside the 20-minute typo-correction grace window, inside the
+        # 2-week cooldown -- back-to-back uploads in the same test would
+        # otherwise land inside the grace window and be allowed by design.
+        self.user.refresh_from_db()
+        self.user.last_picture_change = timezone.now() - timedelta(days=1)
+        self.user.save()
+
+        second = self.client.post(
+            "/api/profile/photo/", {"image": _png_data_url(color=(10, 200, 10))}, format="json"
+        )
+        self.assertEqual(second.status_code, 400)
+
+    def test_upload_allowed_after_two_weeks(self):
+        self.user.last_picture_change = timezone.now() - timedelta(days=15)
+        self.user.save()
+        resp = self.client.post(
+            "/api/profile/photo/", {"image": _png_data_url()}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)

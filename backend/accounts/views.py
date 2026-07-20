@@ -1,6 +1,15 @@
+import base64
+import binascii
+import io
+import uuid
+
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.utils import timezone
+from PIL import Image, UnidentifiedImageError
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,13 +26,32 @@ from .emails import (
     send_password_reset_email,
     send_verification_email,
 )
-from .models import User
+from .models import TosVersion, User
 from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
+    PhotoUploadSerializer,
     ProfileSerializer,
     RegisterSerializer,
+    check_rate_limit,
 )
+
+MAX_UPLOAD_BYTES = 4 * 1024 * 1024  # decoded size; generous for a small cropped avatar
+MAX_PHOTO_DIMENSION = 512
+
+
+def _delete_old_local_media(url):
+    """Best-effort cleanup of the previous upload -- never touches URLs that
+    aren't ours (e.g. someone had set an external URL directly)."""
+    if not url:
+        return
+    marker = settings.MEDIA_URL
+    idx = url.find(marker)
+    if idx == -1:
+        return
+    relative_path = url[idx + len(marker) :]
+    if relative_path and default_storage.exists(relative_path):
+        default_storage.delete(relative_path)
 
 
 class ProfileView(RetrieveUpdateAPIView):
@@ -44,6 +72,88 @@ class ProfileView(RetrieveUpdateAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         return super().update(request, *args, **kwargs)
+
+
+class TosAcceptView(APIView):
+    """
+    Section 5c: "Agree to Continue" on the re-consent pop-up. Deliberately
+    NOT gated behind email_verified like ProfileView -- that lock exists to
+    stop abuse of profile-editing, not to block someone from acknowledging
+    an updated legal document.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user.tos_accepted_at = timezone.now()
+        user.tos_accepted_version = TosVersion.current()
+        user.save(update_fields=["tos_accepted_at", "tos_accepted_version"])
+        return Response(ProfileSerializer(user, context={"request": request}).data)
+
+
+class ProfilePhotoUploadView(APIView):
+    """
+    Section 7b: the photo editor's Submit button. Replaces the demo's
+    "nothing is persisted" behavior -- the cropped canvas render actually
+    gets decoded, verified, re-encoded, and stored, same rate-limit and
+    verification gate as PATCH /api/profile/ for profile_picture_url.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not request.user.email_verified:
+            return Response(
+                {"detail": "Verify your email before editing Profile Settings."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = PhotoUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        now = timezone.now()
+        allowed, _, error = check_rate_limit(user.last_picture_change, now)
+        if not allowed:
+            return Response({"detail": error}, status=status.HTTP_400_BAD_REQUEST)
+
+        _, encoded = serializer.validated_data["image"].split(",", 1)
+        try:
+            raw = base64.b64decode(encoded, validate=True)
+        except (binascii.Error, ValueError):
+            return Response({"detail": "Invalid image data."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not raw or len(raw) > MAX_UPLOAD_BYTES:
+            return Response({"detail": "Image is too large."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            Image.open(io.BytesIO(raw)).verify()
+            image = Image.open(io.BytesIO(raw))  # verify() consumes the parser -- reopen to use it
+        except (UnidentifiedImageError, OSError, ValueError):
+            return Response(
+                {"detail": "That doesn't look like a valid image."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Re-encode as PNG at a capped size -- discards any metadata/payload
+        # riding along with the pixel data, rather than trusting the
+        # client-supplied bytes wholesale.
+        image = image.convert("RGBA")
+        image.thumbnail((MAX_PHOTO_DIMENSION, MAX_PHOTO_DIMENSION))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+
+        old_url = user.profile_picture_url
+        filename = f"profile_pictures/user_{user.id}_{uuid.uuid4().hex}.png"
+        saved_path = default_storage.save(filename, ContentFile(buffer.getvalue()))
+        user.profile_picture_url = request.build_absolute_uri(default_storage.url(saved_path))
+
+        _, user.last_picture_change, _ = check_rate_limit(user.last_picture_change, now)
+        user.save(update_fields=["profile_picture_url", "last_picture_change"])
+
+        _delete_old_local_media(old_url)
+
+        return Response(ProfileSerializer(user, context={"request": request}).data)
 
 
 class RegisterView(CreateAPIView):

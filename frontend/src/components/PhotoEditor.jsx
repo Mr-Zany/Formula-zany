@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
+import { ApiError } from "../api/client";
 import "./PhotoEditor.css";
 
-// Section 7b, demo quality per the PRD's own allowance: no drag
-// boundary-clamping, and nothing is sent to the backend (profile_picture_url
-// stays a plain URL string) -- Submit just renders the crop to a data URL
-// and hands it back for the caller to use as a local preview.
+// Section 7b: no drag boundary-clamping (the PRD's own explicitly allowed
+// demo-quality gap) -- everything else is real: Submit renders the crop to
+// a data URL and uploads it, awaiting the caller's onSubmit to actually
+// persist it server-side before closing.
 const CIRCLE_SIZE = 220;
 const MAX_ZOOM = 3;
 
@@ -14,6 +15,8 @@ export default function PhotoEditor({ onCancel, onSubmit }) {
   const [naturalSize, setNaturalSize] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
   const dragState = useRef(null);
 
   function pickPhoto() {
@@ -65,6 +68,7 @@ export default function PhotoEditor({ onCancel, onSubmit }) {
   }
 
   function handleSubmit() {
+    setError(null);
     const canvas = document.createElement("canvas");
     canvas.width = CIRCLE_SIZE;
     canvas.height = CIRCLE_SIZE;
@@ -75,12 +79,22 @@ export default function PhotoEditor({ onCancel, onSubmit }) {
     ctx.clip();
 
     const img = new window.Image();
-    img.onload = () => {
+    img.onload = async () => {
       const drawX = CIRCLE_SIZE / 2 + offset.x - displayWidth / 2;
       const drawY = CIRCLE_SIZE / 2 + offset.y - displayHeight / 2;
       ctx.drawImage(img, drawX, drawY, displayWidth, displayHeight);
       ctx.restore();
-      onSubmit(canvas.toDataURL("image/png"));
+
+      setUploading(true);
+      try {
+        await onSubmit(canvas.toDataURL("image/png"));
+      } catch (err) {
+        setError(
+          err instanceof ApiError ? err.message : "Couldn't update your profile picture. Please try again."
+        );
+      } finally {
+        setUploading(false);
+      }
     };
     img.src = imageSrc;
   }
@@ -147,12 +161,14 @@ export default function PhotoEditor({ onCancel, onSubmit }) {
             Profile picture changes are limited to once every two weeks.
           </p>
 
+          {error && <div className="modal-message error">{error}</div>}
+
           <div className="modal-actions">
-            <button type="button" className="btn-secondary" onClick={pickPhoto}>
+            <button type="button" className="btn-secondary" onClick={pickPhoto} disabled={uploading}>
               Choose a different photo
             </button>
-            <button type="button" className="btn-primary" onClick={handleSubmit}>
-              Submit
+            <button type="button" className="btn-primary" onClick={handleSubmit} disabled={uploading}>
+              {uploading ? "Uploading..." : "Submit"}
             </button>
           </div>
         </>

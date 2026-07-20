@@ -154,6 +154,12 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Uploaded profile pictures (Section 7b). Local disk storage is fine for
+# dev; swap MEDIA_ROOT/DEFAULT_FILE_STORAGE for real cloud storage (S3 etc.)
+# at deploy time -- same graceful-local-first pattern as the email stubs.
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

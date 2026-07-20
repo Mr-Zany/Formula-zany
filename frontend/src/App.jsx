@@ -6,12 +6,16 @@ import TermsPage from "./pages/TermsPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import SponsorshipsPage from "./pages/SponsorshipsPage";
 import { captureReferralFromUrl } from "./referral";
+import { useAuth } from "./auth/AuthContext";
 import { NotificationProvider } from "./notifications/NotificationContext";
 import ToastStack from "./notifications/ToastStack";
 import LiveNotificationWatcher from "./notifications/LiveNotificationWatcher";
+import TosReconsentModal from "./components/TosReconsentModal";
 import "./App.css";
 
 export default function App() {
+  const { user } = useAuth();
+
   useEffect(() => {
     captureReferralFromUrl();
   }, []);
@@ -20,6 +24,7 @@ export default function App() {
     <NotificationProvider>
       <LiveNotificationWatcher />
       <ToastStack />
+      {user?.needs_tos_reconsent && <TosReconsentModal />}
       <Routes>
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/terms" element={<TermsPage />} />

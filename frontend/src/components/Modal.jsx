@@ -25,7 +25,10 @@ function unlockScroll() {
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])';
 
-export default function Modal({ onClose, children, labelledBy }) {
+// dismissible=false disables Escape-to-close entirely (Section 5c: the ToS
+// re-consent pop-up has no close/X button and no click-outside-to-escape --
+// "Agree to Continue" or "Log Out Instead" are the only two ways out).
+export default function Modal({ onClose, children, labelledBy, dismissible = true }) {
   const panelRef = useRef(null);
   const previouslyFocused = useRef(null);
 
@@ -39,6 +42,7 @@ export default function Modal({ onClose, children, labelledBy }) {
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
+        if (!dismissible) return;
         event.stopPropagation();
         onClose();
         return;
@@ -67,7 +71,7 @@ export default function Modal({ onClose, children, labelledBy }) {
         previouslyFocused.current.focus();
       }
     };
-  }, [onClose]);
+  }, [onClose, dismissible]);
 
   return (
     <div className="modal-overlay">

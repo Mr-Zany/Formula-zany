@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.utils import timezone
 
-from .models import NameDisplayPref, User
+from .models import NameDisplayPref, TosVersion, User
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -68,6 +68,7 @@ class UserAdmin(BaseUserAdmin):
                 "fields": (
                     "newsletter_opt_in",
                     "tos_accepted_at",
+                    "tos_accepted_version",
                     "age_confirmed_at",
                     "email_verified",
                 )
@@ -125,3 +126,17 @@ class UserAdmin(BaseUserAdmin):
             moderation_reset_at=now,
         )
         self.message_user(request, f"Reset display name/photo for {updated} user(s).")
+
+
+@admin.register(TosVersion)
+class TosVersionAdmin(admin.ModelAdmin):
+    list_display = ("version", "updated_at")
+    readonly_fields = ("updated_at",)
+
+    def has_add_permission(self, request):
+        # Singleton (Section 5c) -- bump the existing row's version rather
+        # than creating a second one.
+        return not TosVersion.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
