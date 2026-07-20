@@ -1,0 +1,97 @@
+.home-hero {
+  text-align: center;
+  padding: 40px 20px 8px;
+}
+
+.home-hero h1 {
+  margin: 0 0 6px;
+  font-size: 34px;
+}
+
+.home-hero__tagline {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.home-donate-secondary {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.home-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.home-section h2 {
+  margin: 0 0 12px;
+}
+
+.home-leaderboard-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.home-leaderboard-heading-row h2 {
+  margin: 0;
+}
+
+.home-car-description {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.home-car-description__text {
+  flex: 1;
+  min-width: 240px;
+}
+
+.home-about-link {
+  text-align: center;
+  padding: 12px 20px;
+  color: var(--text-muted);
+}
+
+.home-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .home-two-column {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-ranking-list {
+  padding-left: 20px;
+  line-height: 1.7;
+}
+
+.home-reward-explainer {
+  text-align: center;
+  background: var(--bg-muted);
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.home-donate-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px 60px;
+}
+
+.home-security-line {
+  font-size: 13px;
+  color: var(--text-muted);
+}

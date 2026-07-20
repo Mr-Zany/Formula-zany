@@ -1,0 +1,31 @@
+.referral-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.referral-card h3 {
+  margin: 0 0 10px;
+}
+
+.referral-card__link-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.referral-card__link-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+.referral-card__qr {
+  display: block;
+  margin: 12px auto 0;
+  border-radius: 8px;
+}

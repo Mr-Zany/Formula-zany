@@ -1,25 +1,19 @@
+import { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
-import Header from "./components/Header";
+import HomePage from "./pages/HomePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import { captureReferralFromUrl } from "./referral";
 import "./App.css";
 
-function HomePlaceholder() {
-  return (
-    <div className="app-shell">
-      <Header />
-      <main className="placeholder-main">
-        <h1>Formula Zany</h1>
-        <p>Home page content comes in a later milestone.</p>
-      </main>
-    </div>
-  );
-}
-
 export default function App() {
+  useEffect(() => {
+    captureReferralFromUrl();
+  }, []);
+
   return (
     <Routes>
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="*" element={<HomePlaceholder />} />
+      <Route path="*" element={<HomePage />} />
     </Routes>
   );
 }
