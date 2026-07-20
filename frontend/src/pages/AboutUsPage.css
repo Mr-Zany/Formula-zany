@@ -1,0 +1,78 @@
+.about-branding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 20px;
+  text-align: center;
+}
+
+.about-branding span:first-child {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.about-branding__by {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.about-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px var(--edge-margin, 20px);
+}
+
+.about-section h2 {
+  margin-top: 0;
+}
+
+.about-bio,
+.about-car {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.about-bio__photo,
+.about-car__image {
+  flex-shrink: 0;
+  width: 220px;
+  height: 220px;
+  border-radius: 12px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.about-bio__text,
+.about-car__text {
+  flex: 1;
+  min-width: 260px;
+}
+
+.about-bio__signature {
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.about-video-section__row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.about-video-section__socials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-video-section__socials h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}

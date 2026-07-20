@@ -5,9 +5,7 @@ import AuthModal from "./AuthModal";
 import ProfileSettingsModal from "./ProfileSettingsModal";
 import "./Header.css";
 
-// Section 5a. About Us and Sponsorships are still ComingSoonPage
-// placeholders (their real content is out of scope for this pass), but the
-// routes themselves are real now.
+// Section 5a.
 export default function Header() {
   const { user, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);

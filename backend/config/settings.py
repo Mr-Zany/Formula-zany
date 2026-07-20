@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "accounts",
     "donations",
     "contact",
+    "content",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

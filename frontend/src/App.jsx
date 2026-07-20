@@ -3,7 +3,8 @@ import { Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import TermsPage from "./pages/TermsPage";
-import ComingSoonPage from "./pages/ComingSoonPage";
+import AboutUsPage from "./pages/AboutUsPage";
+import SponsorshipsPage from "./pages/SponsorshipsPage";
 import { captureReferralFromUrl } from "./referral";
 import "./App.css";
 
@@ -16,8 +17,8 @@ export default function App() {
     <Routes>
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/terms" element={<TermsPage />} />
-      <Route path="/about-us" element={<ComingSoonPage title="About Us" />} />
-      <Route path="/sponsorships" element={<ComingSoonPage title="Sponsorships" />} />
+      <Route path="/about-us" element={<AboutUsPage />} />
+      <Route path="/sponsorships" element={<SponsorshipsPage />} />
       <Route path="*" element={<HomePage />} />
     </Routes>
   );
