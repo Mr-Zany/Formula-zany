@@ -1,10 +1,12 @@
+import time
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from accounts.emails import generate_verification_token
+from accounts.emails import generate_reset_token, generate_verification_token
 from accounts.models import User
 
 
@@ -319,3 +321,94 @@ class JWTAuthTests(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["email"], "jwt@example.com")
+
+
+class PasswordResetTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email="resetme@example.com", password="OldPassword123!", full_name="Reset Me"
+        )
+
+    @override_settings(DEBUG=True)
+    def test_request_with_known_email_returns_reset_url_in_debug(self):
+        resp = self.client.post(
+            "/api/auth/password-reset/", {"email": "resetme@example.com"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("reset_url", resp.json())
+
+    @override_settings(DEBUG=True)
+    def test_request_with_unknown_email_gives_same_generic_response_no_url(self):
+        resp = self.client.post(
+            "/api/auth/password-reset/", {"email": "nobody@example.com"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn("reset_url", resp.json())
+
+    @override_settings(DEBUG=False)
+    def test_reset_url_not_exposed_outside_debug(self):
+        resp = self.client.post(
+            "/api/auth/password-reset/", {"email": "resetme@example.com"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn("reset_url", resp.json())
+
+    def test_confirm_with_valid_token_sets_new_password(self):
+        token = generate_reset_token(self.user)
+        resp = self.client.post(
+            "/api/auth/password-reset/confirm/",
+            {"token": token, "new_password": "a-genuinely-strong-passphrase-99"},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("a-genuinely-strong-passphrase-99"))
+
+    def test_confirm_rejects_weak_password(self):
+        token = generate_reset_token(self.user)
+        resp = self.client.post(
+            "/api/auth/password-reset/confirm/",
+            {"token": token, "new_password": "password"},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("OldPassword123!"))
+
+    def test_confirm_rejects_garbage_token(self):
+        resp = self.client.post(
+            "/api/auth/password-reset/confirm/",
+            {"token": "not-a-real-token", "new_password": "a-genuinely-strong-passphrase-99"},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+
+    def test_confirm_rejects_expired_token(self):
+        with patch("django.core.signing.time.time", return_value=time.time() - 7200):
+            token = generate_reset_token(self.user)
+        resp = self.client.post(
+            "/api/auth/password-reset/confirm/",
+            {"token": token, "new_password": "a-genuinely-strong-passphrase-99"},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("expired", resp.json()["detail"])
+
+    def test_reusing_token_after_successful_reset_fails(self):
+        token = generate_reset_token(self.user)
+        first = self.client.post(
+            "/api/auth/password-reset/confirm/",
+            {"token": token, "new_password": "a-genuinely-strong-passphrase-99"},
+            format="json",
+        )
+        self.assertEqual(first.status_code, 200)
+
+        second = self.client.post(
+            "/api/auth/password-reset/confirm/",
+            {"token": token, "new_password": "yet-another-strong-passphrase-11"},
+            format="json",
+        )
+        self.assertEqual(second.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("a-genuinely-strong-passphrase-99"))

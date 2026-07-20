@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -6,13 +8,22 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .emails import (
+    build_reset_url,
     build_verification_url,
+    generate_reset_token,
     generate_verification_token,
+    read_reset_token,
     read_verification_token,
+    send_password_reset_email,
     send_verification_email,
 )
 from .models import User
-from .serializers import ProfileSerializer, RegisterSerializer
+from .serializers import (
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    ProfileSerializer,
+    RegisterSerializer,
+)
 
 
 class ProfileView(RetrieveUpdateAPIView):
@@ -81,3 +92,66 @@ class VerifyEmailView(APIView):
             user.save(update_fields=["email_verified"])
 
         return Response({"detail": "Email verified."})
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Always the same response regardless of whether the email is
+        # registered -- doesn't reveal which addresses have accounts.
+        data = {
+            "detail": "If an account exists for that email, a reset link has been sent."
+        }
+
+        user = User.objects.filter(
+            email=serializer.validated_data["email"]
+        ).first()
+        if user is not None:
+            token = generate_reset_token(user)
+            reset_url = build_reset_url(token)
+            send_password_reset_email(user, reset_url)
+            if settings.DEBUG:
+                data["reset_url"] = reset_url
+
+        return Response(data)
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user_id, pw_fingerprint, error = read_reset_token(
+            serializer.validated_data["token"]
+        )
+        if error == "expired":
+            return Response(
+                {"detail": "This link has expired. Request a new one to reset your password."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = User.objects.filter(pk=user_id).first() if user_id else None
+        # The password fingerprint must still match the user's *current*
+        # hash -- a successful reset changes it, so any other outstanding
+        # token (which encoded the old hash) is rejected here as invalid.
+        if error or user is None or pw_fingerprint != user.password[-12:]:
+            return Response(
+                {"detail": "Invalid or already-used reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        new_password = serializer.validated_data["new_password"]
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as exc:
+            return Response({"new_password": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return Response({"detail": "Password updated. You can now log in with your new password."})
