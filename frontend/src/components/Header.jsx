@@ -1,12 +1,13 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import AuthModal from "./AuthModal";
 import ProfileSettingsModal from "./ProfileSettingsModal";
 import "./Header.css";
 
-// Section 5a. Nav links point at routes that don't exist yet in this
-// milestone (Home/About Us/Sponsorships content comes later) -- they're
-// placeholders so the header layout is real even though the pages aren't.
+// Section 5a. About Us and Sponsorships are still ComingSoonPage
+// placeholders (their real content is out of scope for this pass), but the
+// routes themselves are real now.
 export default function Header() {
   const { user, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
@@ -20,9 +21,9 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="site-header__nav">
-        <a href="/">Home</a>
-        <a href="/about-us">About Us</a>
-        <a href="/sponsorships">Sponsorships</a>
+        <Link to="/">Home</Link>
+        <Link to="/about-us">About Us</Link>
+        <Link to="/sponsorships">Sponsorships</Link>
       </div>
 
       <div className="site-header__account">

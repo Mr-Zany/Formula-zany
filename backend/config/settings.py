@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "accounts",
     "donations",
+    "contact",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

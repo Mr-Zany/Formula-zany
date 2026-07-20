@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import MilestoneBar from "../components/MilestoneBar";
 import Leaderboard from "../components/Leaderboard";
 import ReferralCard from "../components/ReferralCard";
@@ -67,7 +69,7 @@ export default function HomePage() {
 
       <p className="home-about-link">
         Want the full story, parts list, and build plan? Head to{" "}
-        <a href="/about-us">About Us</a>.
+        <Link to="/about-us">About Us</Link>.
       </p>
 
       <section className="home-section home-two-column">
@@ -98,6 +100,8 @@ export default function HomePage() {
           Payments securely processed by Stripe -- we never see or store your card details.
         </p>
       </div>
+
+      <Footer />
 
       {donateOpen && <DonateModal onClose={() => setDonateOpen(false)} />}
     </div>

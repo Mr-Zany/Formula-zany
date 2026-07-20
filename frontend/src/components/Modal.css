@@ -42,12 +42,19 @@
 .modal-field input[type="text"],
 .modal-field input[type="email"],
 .modal-field input[type="password"],
-.modal-field input[type="url"] {
+.modal-field input[type="url"],
+.modal-field input[type="number"],
+.modal-field textarea {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--bg);
   color: var(--text);
+  font-family: inherit;
+}
+
+.modal-field textarea {
+  resize: vertical;
 }
 
 .modal-checkbox {
