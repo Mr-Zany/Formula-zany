@@ -29,6 +29,11 @@
   margin: 0 0 12px;
 }
 
+.home-leaderboard-section {
+  margin: 0 var(--edge-margin);
+  padding: 32px 0;
+}
+
 .home-leaderboard-heading-row {
   display: flex;
   align-items: center;

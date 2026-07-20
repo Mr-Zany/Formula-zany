@@ -1,7 +1,5 @@
 .milestone-bar {
-  max-width: 900px;
-  margin: 20px auto 0;
-  padding: 0 20px;
+  margin: 20px var(--edge-margin) 0;
 }
 
 .milestone-bar--loading .milestone-bar__track {

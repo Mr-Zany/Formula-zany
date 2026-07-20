@@ -9,6 +9,10 @@
   --danger: #c81e1e;
   --success: #1b7a3d;
 
+  /* Edge margin for full-bleed elements (milestone bar, leaderboard):
+     ~2in on desktop, ~0.25in on mobile (see the max-width: 768px override). */
+  --edge-margin: 192px;
+
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: light dark;
   color: var(--text);
@@ -22,6 +26,12 @@
     --bg: #16171d;
     --bg-muted: #1f2028;
     --border: #2e303a;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --edge-margin: 24px;
   }
 }
 

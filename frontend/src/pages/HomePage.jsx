@@ -34,7 +34,7 @@ export default function HomePage() {
         </button>
       </div>
 
-      <section className="home-section">
+      <section className="home-leaderboard-section">
         <div className="home-leaderboard-heading-row">
           <h2>Leaderboard</h2>
         </div>
