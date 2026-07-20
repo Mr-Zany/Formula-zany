@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
     "accounts",
@@ -70,6 +71,7 @@ SIMPLE_JWT = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -163,8 +165,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 
 # Where Stripe Checkout redirects back to after payment (success/cancel URLs).
-# No React app exists yet (Step 6) — defaults to a local placeholder.
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 # $150,000 build goal (PRD Section 2c).
 FUNDING_GOAL_CENTS = 15_000_000
+
+# The React dev server's origin needs CORS access to call this API.
+CORS_ALLOWED_ORIGINS = [
+    o for o in os.environ.get("CORS_ALLOWED_ORIGINS", FRONTEND_URL).split(",") if o
+]
