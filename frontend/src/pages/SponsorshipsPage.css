@@ -3,6 +3,9 @@
   align-items: stretch;
   min-height: 480px;
   flex: 1;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .sponsorships-page__image {
@@ -28,13 +31,13 @@
 }
 
 .sponsorships-page__center {
-  flex: 0 0 320px;
+  flex: 0 0 440px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  padding: 24px;
+  padding: 24px 40px;
   text-align: center;
 }
 
@@ -45,5 +48,10 @@
 
   .sponsorships-page__image {
     min-height: 200px;
+  }
+
+  .sponsorships-page__center {
+    flex: 0 0 auto;
+    padding: 24px 20px;
   }
 }

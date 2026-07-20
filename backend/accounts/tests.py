@@ -8,6 +8,7 @@ from rest_framework.test import APIClient
 
 from accounts.emails import generate_reset_token, generate_verification_token
 from accounts.models import User
+from donations.models import Donation
 
 
 class ProfileViewTests(TestCase):
@@ -173,6 +174,31 @@ class ProfileViewTests(TestCase):
             "/api/profile/", {"full_name": "Fresh Real Name"}, format="json"
         )
         self.assertEqual(resp.status_code, 200)
+
+    def test_just_reached_gold_true_once_then_false(self):
+        Donation.objects.create(user=self.user, amount_cents=999999, stripe_payment_id="pi_gold")
+        self.client.force_authenticate(user=self.user)
+
+        first = self.client.get("/api/profile/")
+        self.assertTrue(first.json()["just_reached_gold"])
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.notified_gold)
+
+        second = self.client.get("/api/profile/")
+        self.assertFalse(second.json()["just_reached_gold"])
+
+    def test_moderation_reset_at_exposed_read_only(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.get("/api/profile/")
+        self.assertIn("moderation_reset_at", resp.json())
+        patch_resp = self.client.patch(
+            "/api/profile/",
+            {"moderation_reset_at": "2020-01-01T00:00:00Z"},
+            format="json",
+        )
+        self.assertEqual(patch_resp.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertIsNone(self.user.moderation_reset_at)
 
 
 VALID_REGISTRATION = {

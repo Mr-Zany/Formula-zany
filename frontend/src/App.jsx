@@ -6,6 +6,9 @@ import TermsPage from "./pages/TermsPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import SponsorshipsPage from "./pages/SponsorshipsPage";
 import { captureReferralFromUrl } from "./referral";
+import { NotificationProvider } from "./notifications/NotificationContext";
+import ToastStack from "./notifications/ToastStack";
+import LiveNotificationWatcher from "./notifications/LiveNotificationWatcher";
 import "./App.css";
 
 export default function App() {
@@ -14,12 +17,16 @@ export default function App() {
   }, []);
 
   return (
-    <Routes>
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/about-us" element={<AboutUsPage />} />
-      <Route path="/sponsorships" element={<SponsorshipsPage />} />
-      <Route path="*" element={<HomePage />} />
-    </Routes>
+    <NotificationProvider>
+      <LiveNotificationWatcher />
+      <ToastStack />
+      <Routes>
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/about-us" element={<AboutUsPage />} />
+        <Route path="/sponsorships" element={<SponsorshipsPage />} />
+        <Route path="*" element={<HomePage />} />
+      </Routes>
+    </NotificationProvider>
   );
 }

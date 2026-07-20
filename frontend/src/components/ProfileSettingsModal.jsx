@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { useNotifications } from "../notifications/NotificationContext";
 import Modal from "./Modal";
 import PhotoEditor from "./PhotoEditor";
 import "./ProfileSettingsModal.css";
 
 export default function ProfileSettingsModal({ onClose }) {
   const { user, updateProfile, logout } = useAuth();
+  const { pushNotification } = useNotifications();
 
   const [photoEditorOpen, setPhotoEditorOpen] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState(null);
@@ -29,6 +31,10 @@ export default function ProfileSettingsModal({ onClose }) {
     event.preventDefault();
     setFullNameMsg(null);
     setFullNameSaving(true);
+    // Note: the PRD's "Display name update" toast (13d) maps to the
+    // separate display_name field/form below -- full_name is a field this
+    // project added on top of the PRD (the 90-day real-name cooldown), so
+    // it has no matching toast pool entry and stays inline-only here.
     try {
       await updateProfile({ full_name: fullName });
       setFullNameMsg({ type: "success", text: "Full name updated." });
@@ -52,11 +58,13 @@ export default function ProfileSettingsModal({ onClose }) {
         name_display_pref: showDisplayName ? "display_name" : "full_name",
       });
       setNameMsg({ type: "success", text: "Display name updated." });
+      pushNotification("display_name_success");
     } catch (err) {
       setNameMsg({
         type: "error",
         text: err instanceof ApiError ? err.message : "Couldn't update your display name. Please try again.",
       });
+      pushNotification("display_name_failed");
     } finally {
       setNameSaving(false);
     }
@@ -76,6 +84,7 @@ export default function ProfileSettingsModal({ onClose }) {
 
   function handleLogoutConfirmed() {
     logout();
+    pushNotification("sign_out");
     onClose();
   }
 

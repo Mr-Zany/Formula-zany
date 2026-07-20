@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.utils import timezone
 
-from .models import User
+from .models import NameDisplayPref, User
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -35,6 +36,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ("is_staff", "is_active", "email_verified", "last_seen_rank")
     search_fields = ("email", "full_name", "display_name")
     readonly_fields = ("date_joined", "last_login")
+    actions = ["reset_moderation"]
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
@@ -108,3 +110,18 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+
+    @admin.action(description="Reset display name/photo (moderation takedown)")
+    def reset_moderation(self, request, queryset):
+        # Section 7b: a moderator-forced reset restores the default state
+        # and is explicitly exempt from the 2-week change-limit fields
+        # (last_name_change/last_picture_change are deliberately untouched
+        # here), so the user can immediately set a new name/photo.
+        now = timezone.now()
+        updated = queryset.update(
+            display_name="",
+            profile_picture_url=None,
+            name_display_pref=NameDisplayPref.FULL_NAME,
+            moderation_reset_at=now,
+        )
+        self.message_user(request, f"Reset display name/photo for {updated} user(s).")

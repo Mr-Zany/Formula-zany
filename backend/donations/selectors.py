@@ -151,3 +151,49 @@ def compute_leaderboard() -> list[LeaderboardEntry]:
         entry.sponsor_tier = True
 
     return entries
+
+
+# Lower = better. Used to detect a genuine Rank *drop* (Gold -> Silver etc.),
+# as opposed to a Placement shift within the same Rank, which the away check
+# (Section 9b) deliberately ignores (Section 9c's live check is the more
+# sensitive one that reacts to Placement alone).
+RANK_ORDER = {Rank.GOLD: 0, Rank.SILVER: 1, Rank.BRONZE: 2, Rank.UNRANKED: 3}
+
+
+def get_entry_for_user(user, entries=None):
+    """Look up one user's LeaderboardEntry, or None if they're unranked/have no points."""
+    entries = entries if entries is not None else compute_leaderboard()
+    for entry in entries:
+        if entry.user.id == user.id:
+            return entry
+    return None
+
+
+def apply_rank_notification_flags(user, entry):
+    """
+    Section 9b/9c + 10b: notified_gold/notified_top3 track whether the
+    celebratory notice has already fired for the *current* stay in that
+    tier/spot -- flips true on the false->true edge (returned as
+    just_reached_*), clears back to false the moment the user falls out, so
+    a future re-entry celebrates again. Called from both the login check and
+    every profile poll; idempotent by construction, so neither call site can
+    double-fire it.
+    """
+    in_gold = entry is not None and entry.tier == Rank.GOLD
+    in_top3 = entry is not None and entry.sponsor_tier
+
+    just_reached_gold = in_gold and not user.notified_gold
+    just_reached_top3 = in_top3 and not user.notified_top3
+
+    changed_fields = []
+    if user.notified_gold != in_gold:
+        user.notified_gold = in_gold
+        changed_fields.append("notified_gold")
+    if user.notified_top3 != in_top3:
+        user.notified_top3 = in_top3
+        changed_fields.append("notified_top3")
+
+    if changed_fields:
+        user.save(update_fields=changed_fields)
+
+    return just_reached_gold, just_reached_top3

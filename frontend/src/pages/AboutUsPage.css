@@ -19,7 +19,7 @@
 .about-section {
   max-width: 900px;
   margin: 0 auto;
-  padding: 32px var(--edge-margin, 20px);
+  padding: 32px 20px;
 }
 
 .about-section h2 {

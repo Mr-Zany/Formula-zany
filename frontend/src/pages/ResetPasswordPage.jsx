@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../api/client";
+import { useNotifications } from "../notifications/NotificationContext";
 import "../components/Modal.css";
 import "./ResetPasswordPage.css";
 
@@ -10,6 +11,7 @@ import "./ResetPasswordPage.css";
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
+  const { pushNotification } = useNotifications();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,10 +38,12 @@ export default function ResetPasswordPage() {
         auth: false,
       });
       setSuccess(true);
+      pushNotification("password_reset_success");
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
       if (message.toLowerCase().includes("expired")) {
         setExpired(true);
+        pushNotification("password_reset_expired");
       } else {
         setError(message);
       }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { apiFetch, ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { useNotifications } from "../notifications/NotificationContext";
 import { getStoredReferralCode } from "../referral";
 import Modal from "./Modal";
 import AuthModal from "./AuthModal";
@@ -11,6 +12,7 @@ const MIN_DOLLARS = 1;
 
 export default function DonateModal({ onClose }) {
   const { user } = useAuth();
+  const { pushNotification } = useNotifications();
   const [amountDollars, setAmountDollars] = useState(20);
   const [customAmount, setCustomAmount] = useState("");
   const [coverFee, setCoverFee] = useState(false);
@@ -38,6 +40,9 @@ export default function DonateModal({ onClose }) {
       window.location.href = data.checkout_url;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      // Section 9c: "fires alongside Stripe Checkout's own inline error" --
+      // shown in addition to, not instead of, the inline message above.
+      pushNotification("donation_failed");
       setSubmitting(false);
     }
   }

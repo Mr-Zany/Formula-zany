@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework import serializers
 
-from donations.selectors import compute_leaderboard
+from donations.selectors import apply_rank_notification_flags, compute_leaderboard
 
 from .models import Rank, User
 
@@ -51,6 +51,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     on_car = serializers.SerializerMethodField()
     sponsor_tier = serializers.SerializerMethodField()
 
+    # Section 9c live-check support: GET /api/profile/ doubles as the
+    # frontend's polling target, so these flip true exactly once on the
+    # threshold-crossing edge (see apply_rank_notification_flags).
+    just_reached_gold = serializers.SerializerMethodField()
+    just_reached_top3 = serializers.SerializerMethodField()
+
     # Static informational text for the frontend to show next to the
     # full_name field -- not a confirmation gate, just a heads-up about the
     # real-name requirement and the 90-day cooldown before it's submitted.
@@ -74,6 +80,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "last_picture_change",
             "last_full_name_change",
             "full_name_change_notice",
+            "moderation_reset_at",
             "referral_code",
             "referral_url",
             "points",
@@ -82,6 +89,8 @@ class ProfileSerializer(serializers.ModelSerializer):
             "referred_count",
             "on_car",
             "sponsor_tier",
+            "just_reached_gold",
+            "just_reached_top3",
         ]
         # id/email/email_verified stay fixed here: account identity fields
         # not exposed anywhere in the Profile Settings panel (Section 7).
@@ -97,6 +106,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "last_name_change",
             "last_picture_change",
             "last_full_name_change",
+            "moderation_reset_at",
         ]
 
     def _leaderboard_entry(self, user):
@@ -127,6 +137,18 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_sponsor_tier(self, obj):
         entry = self._leaderboard_entry(obj)
         return entry.sponsor_tier if entry else False
+
+    def _rank_notification_flags(self, obj):
+        if not hasattr(self, "_rank_flags_cache"):
+            entry = self._leaderboard_entry(obj)
+            self._rank_flags_cache = apply_rank_notification_flags(obj, entry)
+        return self._rank_flags_cache
+
+    def get_just_reached_gold(self, obj):
+        return self._rank_notification_flags(obj)[0]
+
+    def get_just_reached_top3(self, obj):
+        return self._rank_notification_flags(obj)[1]
 
     def get_referral_code(self, obj):
         # Referral link only activates once email is verified (Section 8).

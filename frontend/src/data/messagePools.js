@@ -86,3 +86,111 @@ export function unrankedMessage(amountToBronzeCents) {
   const amount = (amountToBronzeCents / 100).toFixed(2).replace(/\.00$/, "");
   return `You're $${amount} away from Bronze — every donor started here.`;
 }
+
+// Section 13d-13g: the notification/toast message pools (Section 9). Wired
+// but not yet reachable: DONATION_RECEIVED_UP/DONATION_RECEIVED_SAME need
+// the Stripe webhook (Step 7) to know a donation just landed for the
+// current user -- there's no trigger point for them until then.
+
+const DONATION_RECEIVED_UP = [
+  ({ spots, placement, tier }) =>
+    `Nice! Your donation moved you up ${spots} spots. Now placed number ${placement}, ${tier}.`,
+  ({ spots, placement, tier }) =>
+    `That donation dive-bombed past ${spots} different drivers — you're now in ${placement}th place in ${tier}.`,
+  ({ spots, placement, tier }) =>
+    `Overtake mode activated, gaining you ${spots} spots! Placement #${placement}, ${tier}, and climbing.`,
+];
+
+const DONATION_RECEIVED_SAME = [
+  () => "Donation received.",
+  () => "We thank you for your donation.",
+  ({ tier }) => `Donation confirmed. Your rank: ${tier}.`,
+];
+
+const LIVE_PLACEMENT_DROP = [
+  () => "A rival's on your tail. Never mind, they passed you around turn three.",
+  ({ placement }) => `Someone's active aero bumped you down to #${placement}.`,
+  ({ placement }) => `Someone used their boost to pass you. You're now placed number ${placement}.`,
+];
+
+const LIVE_REFERRAL_TOAST = [
+  () => "Recruitment successful. +5 referral points.",
+  () => "One of yours just paid up. Nicely done. +5 referral points.",
+  () => "Your number two driver showed up. +5 referral points.",
+];
+
+const AWAY_RANK_DROPPED = [
+  ({ oldTier, newTier }) => `You got lapped while you were gone — dropped from ${oldTier} to ${newTier}.`,
+  ({ newTier }) => `Someone put in a fast lap while you were away — you're in ${newTier} now.`,
+  ({ oldTier, newTier }) => `You came back to find yourself off the podium — ${oldTier} to ${newTier}.`,
+];
+
+const REACHED_GOLD = [
+  () => "You just reached Gold. Welcome to the top of the board.",
+  () => "Gold. You earned it — literally.",
+  () => "That donation just put you in Gold. Nice work.",
+];
+
+const REACHED_TOP3 = [
+  () => "You're in the Top 3 now — one of the biggest reasons this car gets built.",
+  () => "Top 3. Your sponsorship spot is locked in.",
+  () => "You just broke into the Top 3. That's rare air.",
+];
+
+function pick(pool, vars) {
+  const fn = pool[Math.floor(Math.random() * pool.length)];
+  return fn(vars);
+}
+
+export function pickDonationReceivedUpMessage(vars) {
+  return pick(DONATION_RECEIVED_UP, vars);
+}
+
+export function pickDonationReceivedSameMessage(vars) {
+  return pick(DONATION_RECEIVED_SAME, vars);
+}
+
+export function pickLivePlacementDropMessage(vars) {
+  return pick(LIVE_PLACEMENT_DROP, vars);
+}
+
+export function pickLiveReferralToastMessage() {
+  return pick(LIVE_REFERRAL_TOAST, {});
+}
+
+export function pickAwayRankDroppedMessage(vars) {
+  return pick(AWAY_RANK_DROPPED, vars);
+}
+
+export function pickReachedGoldMessage() {
+  return pick(REACHED_GOLD, {});
+}
+
+export function pickReachedTop3Message() {
+  return pick(REACHED_TOP3, {});
+}
+
+// Referral catch-up (login banner) reuses the same pool as the leaderboard
+// row's referral messages (Section 13f: "also used for the login catch-up
+// banner"), keyed to {referred}.
+export function pickReferralCatchupMessage(count) {
+  return REFERRAL_MESSAGES[Math.floor(Math.random() * REFERRAL_MESSAGES.length)]({
+    referred: count,
+  });
+}
+
+// Fixed single-line strings (Section 13d/13e) -- not pools, PRD gives exact text.
+export const FIXED_MESSAGES = {
+  profilePictureUpdateSuccess: "Profile picture updated.",
+  profilePictureUpdateFailed: "Couldn't update your profile picture. Please try again.",
+  displayNameUpdateSuccess: "Display name updated.",
+  displayNameUpdateFailed: "Couldn't update your display name. Please try again.",
+  passwordResetSuccess: "Password updated. You can now log in with your new password.",
+  passwordResetExpired: "This link has expired. Request a new one to reset your password.",
+  donationFailed: "Donation failed. Please try again.",
+  accountCreated: "Account created! Welcome to Formula Zany.",
+  signIn: "Welcome back.",
+  signOut: "Signed out.",
+  moderationTakedown:
+    "Your display name or profile picture violated our Terms of Service and was removed by a moderator. Please upload something new, or contact us if you believe this was a mistake.",
+};

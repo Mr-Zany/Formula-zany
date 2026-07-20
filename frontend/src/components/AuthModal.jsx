@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { apiFetch, ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { useNotifications } from "../notifications/NotificationContext";
 import Modal from "./Modal";
 
 const VIEWS = { LOGIN: "login", SIGNUP: "signup", FORGOT: "forgot" };
@@ -25,6 +26,7 @@ export default function AuthModal({ onClose }) {
 
 function LoginView({ onClose, onSwitch }) {
   const { login } = useAuth();
+  const { pushLoginEvents } = useNotifications();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -35,7 +37,8 @@ function LoginView({ onClose, onSwitch }) {
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
+      const { events } = await login(email, password);
+      pushLoginEvents(events);
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
@@ -96,6 +99,7 @@ function LoginView({ onClose, onSwitch }) {
 
 function SignupView({ onClose, onSwitch }) {
   const { register } = useAuth();
+  const { pushLoginEvents } = useNotifications();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -122,7 +126,8 @@ function SignupView({ onClose, onSwitch }) {
       const payload = { ...form };
       if (!payload.display_name) delete payload.display_name;
       if (!payload.profile_picture_url) delete payload.profile_picture_url;
-      await register(payload);
+      const { events } = await register(payload);
+      pushLoginEvents(events);
       setSuccess(true);
       setTimeout(onClose, 1500);
     } catch (err) {

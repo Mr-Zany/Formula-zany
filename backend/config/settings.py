@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "donations",
     "contact",
     "content",
+    "notifications",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

@@ -34,7 +34,23 @@ export function AuthProvider({ children }) {
         auth: false,
       });
       setTokens({ access: data.access, refresh: data.refresh });
-      return refreshProfile();
+      // Section 9b: the once-per-login check (sign in/account
+      // created/catch-up/reached Gold-or-Top3-while-away/etc). Called
+      // *before* refreshProfile below -- both endpoints run the same
+      // idempotent just-reached-Gold/Top3 flag flip (Section 10b), so
+      // whichever runs first "wins" the edge-trigger. Login-events must win
+      // here, or a threshold crossed while away gets miscategorized as a
+      // live event (wrong dismiss timing, and it won't join the combined
+      // away banner). Best-effort -- a failure here shouldn't block login.
+      let events = [];
+      try {
+        const loginEvents = await apiFetch("/notifications/login-events/");
+        events = loginEvents.events || [];
+      } catch {
+        events = [];
+      }
+      const profile = await refreshProfile();
+      return { profile, events };
     },
     [refreshProfile]
   );
@@ -48,8 +64,8 @@ export function AuthProvider({ children }) {
       });
       // Sign them in immediately so they're not forced through the login
       // form a second time right after signing up.
-      await login(payload.email, payload.password);
-      return data;
+      const loginResult = await login(payload.email, payload.password);
+      return { ...data, ...loginResult };
     },
     [login]
   );
