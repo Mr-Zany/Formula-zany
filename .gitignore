@@ -5,10 +5,12 @@ __pycache__/
 backend/.env
 backend/db.sqlite3
 backend/staticfiles/
+backend/media/
 
-# Frontend (added later)
+# Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/.env
 
 # Editor / OS
 .DS_Store

@@ -1,0 +1,74 @@
+.stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 3px solid var(--border);
+  max-width: 640px;
+}
+
+.stepper__turn {
+  position: relative;
+  padding: 4px 0 20px 24px;
+  cursor: default;
+}
+
+.stepper__marker {
+  position: absolute;
+  left: -9px;
+  top: 6px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 3px solid var(--border);
+}
+
+.stepper__turn--done .stepper__marker {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.stepper__turn--current .stepper__marker {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.stepper__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stepper__heading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.stepper__turn-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stepper__badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.stepper__badge--done {
+  background: var(--success);
+}
+
+.stepper__body {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 560px;
+}

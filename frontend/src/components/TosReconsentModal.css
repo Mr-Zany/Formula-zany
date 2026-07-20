@@ -1,0 +1,37 @@
+/* Widen the shared Modal panel just for this one -- the ToS body needs
+   more room than the 420px auth-form default. */
+.modal-panel:has(.tos-reconsent) {
+  width: 700px;
+}
+
+.tos-reconsent__banner {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.tos-reconsent__banner strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.tos-reconsent__banner p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Combined selector (not just .tos-reconsent__scroll) so this reliably
+   wins over TermsPage.css's .terms-page margin/padding regardless of CSS
+   import/bundling order. */
+.tos-reconsent__scroll.terms-page {
+  max-width: none;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 20px;
+  margin: 0;
+  text-align: left;
+}

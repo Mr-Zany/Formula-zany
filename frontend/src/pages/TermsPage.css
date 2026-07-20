@@ -1,0 +1,29 @@
+.terms-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+  line-height: 1.6;
+}
+
+.terms-page h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.terms-page h2 {
+  margin-top: 32px;
+  font-size: 18px;
+}
+
+.terms-page__notice {
+  background: var(--bg-muted);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.terms-page__effective-date {
+  margin-top: 40px;
+  color: var(--text-muted);
+}

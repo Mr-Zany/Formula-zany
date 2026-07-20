@@ -59,13 +59,18 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=NameDisplayPref.FULL_NAME,
     )
 
-    # Original-change timestamps for the 2-week name/photo change cycle (PRD 7b).
-    # A correction within the 20-minute grace window does not update these.
+    # Original-change timestamps for the display-name/photo/full-name change
+    # cooldowns (PRD 7b, and the full-name cooldown added on top of it). A
+    # correction within the 20-minute grace window does not update these.
     last_name_change = models.DateTimeField(null=True, blank=True)
     last_picture_change = models.DateTimeField(null=True, blank=True)
+    last_full_name_change = models.DateTimeField(null=True, blank=True)
 
     newsletter_opt_in = models.BooleanField(default=False)
     tos_accepted_at = models.DateTimeField(null=True, blank=True)
+    # Which TosVersion.version this user last agreed to -- compared against
+    # the current version to trigger the re-consent pop-up (Section 5c).
+    tos_accepted_version = models.PositiveIntegerField(default=1)
     age_confirmed_at = models.DateTimeField(null=True, blank=True)
     email_verified = models.BooleanField(default=False)
 
@@ -92,3 +97,30 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+    def public_name(self):
+        """The name shown on the leaderboard, per this user's own display preference (Section 7)."""
+        if self.name_display_pref == NameDisplayPref.DISPLAY_NAME and self.display_name:
+            return self.display_name
+        return self.full_name
+
+
+class TosVersion(models.Model):
+    """
+    Singleton row (always pk=1): the current Terms of Service version.
+    Section 5c: when the Terms materially change, an admin bumps `version`
+    here, which trips the re-consent pop-up for every user whose
+    tos_accepted_version is behind it. Bumping this is a human judgment call
+    ("materially changed"), not automatic.
+    """
+
+    version = models.PositiveIntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"ToS version {self.version}"
+
+    @classmethod
+    def current(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={"version": 1})
+        return obj.version

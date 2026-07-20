@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -42,14 +43,38 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
+    "rest_framework",
+    "rest_framework_simplejwt",
     "accounts",
     "donations",
+    "contact",
+    "content",
+    "notifications",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
 
+REST_FRAMEWORK = {
+    # SessionAuthentication stays for the browsable API / admin session;
+    # JWTAuthentication is what the React SPA (Step 6) will actually use.
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -129,7 +154,32 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Uploaded profile pictures (Section 7b). Local disk storage is fine for
+# dev; swap MEDIA_ROOT/DEFAULT_FILE_STORAGE for real cloud storage (S3 etc.)
+# at deploy time -- same graceful-local-first pattern as the email stubs.
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Formula Zany project settings
+
+# Blank until a real Stripe test-mode account exists (PRD Section 10d, Step 7).
+# The /api/donate/ endpoint checks for this and returns a clear 503 if unset,
+# rather than the raw stripe library error.
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+
+# Where Stripe Checkout redirects back to after payment (success/cancel URLs).
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
+# $150,000 build goal (PRD Section 2c).
+FUNDING_GOAL_CENTS = 15_000_000
+
+# The React dev server's origin needs CORS access to call this API.
+CORS_ALLOWED_ORIGINS = [
+    o for o in os.environ.get("CORS_ALLOWED_ORIGINS", FRONTEND_URL).split(",") if o
+]

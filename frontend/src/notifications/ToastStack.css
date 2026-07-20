@@ -1,0 +1,112 @@
+.toast-stack {
+  position: fixed;
+  top: 66px;
+  /* Matches .site-header's own right padding (Header.css) so the stack
+     sits directly under the avatar/login button, not out near the
+     --edge-margin gutter -- that variable is for full-bleed sections, not
+     this. */
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  animation: toast-in 0.15s ease-out;
+}
+
+.toast__lines {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast__lines p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast__lines p + p {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.toast__close {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.toast__close:hover {
+  opacity: 1;
+}
+
+/* Section 9a color coding. "Filled" variants use white/near-white text on a
+   solid background; "white background" variants keep the page background
+   with just the icon/border/text tinted. */
+.toast--green {
+  background: #1b7a3d;
+  color: #ffffff;
+}
+
+.toast--amber {
+  background: #b5730a;
+  color: #ffffff;
+}
+
+.toast--red {
+  background: #c81e1e;
+  color: #ffffff;
+}
+
+.toast--gray {
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.toast--blue {
+  background: var(--bg);
+  color: #2454c8;
+  border: 1px solid var(--border);
+}
+
+.toast--purple {
+  background: var(--bg);
+  color: #7a2ec8;
+  border: 1px solid var(--border);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .toast-stack {
+    width: auto;
+    left: 12px;
+    right: 12px;
+  }
+}
