@@ -16,21 +16,21 @@
   background: color-mix(in srgb, var(--success) 12%, transparent);
   color: var(--success);
   padding: 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
 }
 
 .milestone-bar__track {
   position: relative;
   height: 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-muted);
   margin: 0 8px 28px;
 }
 
 .milestone-bar__fill {
   height: 100%;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--accent);
   transition: width 0.4s ease;
 }

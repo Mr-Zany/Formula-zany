@@ -1,6 +1,7 @@
 .leaderboard-wrapper {
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
   overflow: hidden;
 }
 
@@ -16,7 +17,7 @@
 
 .leaderboard-sort select {
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
@@ -31,8 +32,9 @@
   padding: 30px;
   text-align: center;
   color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
 }
 
 .leaderboard__no-results {

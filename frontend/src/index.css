@@ -1,32 +1,50 @@
 :root {
-  --text: #1a1a1a;
-  --text-muted: #6b6b6b;
-  --bg: #ffffff;
-  --bg-muted: #f5f5f5;
-  --border: #e0e0e0;
-  --accent: #c81e1e;
+  /* Brand Book Section 01 -- Color System (OKLCH, as specified in the book) */
+  --ink: oklch(19% 0.008 255); /* Shop Black */
+  --paper: oklch(96% 0.01 70); /* Kraft White */
+  --accent: oklch(55% 0.19 38); /* Torch Red-Orange */
+  --accent-press: oklch(42% 0.15 30); /* Rust Red -- hover/press */
   --accent-contrast: #ffffff;
-  --danger: #c81e1e;
-  --success: #1b7a3d;
+  --success: oklch(45% 0.13 145);
+  /* Errors reuse the accent hue rather than a separate red -- "never a
+     color-only signal," per the book's own rule (Section 10). */
+  --danger: var(--accent);
+  --focus-ring: oklch(78% 0.15 70); /* amber -- "never removed" */
+
+  --text: oklch(25% 0.02 50);
+  --text-muted: oklch(45% 0.02 50);
+  --bg: var(--paper);
+  --bg-muted: oklch(93% 0.01 60);
+  --border: oklch(88% 0.02 60);
+
+  /* Section 09 -- Spacing & Grid: 8px base unit, no in-between values */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Section 09/10 -- "stamped/hard" corners, not soft/rounded */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-pill: 20px;
+
+  /* Section 11 -- Elevation: hard offset shadows, no blur */
+  --shadow-raised: 3px 3px 0 var(--ink);
+  --shadow-popped: 6px 6px 0 var(--accent);
 
   /* Edge margin for full-bleed elements (milestone bar, leaderboard):
      ~2in on desktop, ~0.25in on mobile (see the max-width: 768px override). */
   --edge-margin: 192px;
 
-  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  color-scheme: light dark;
+  font-family: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #e5e5e5;
-    --text-muted: #a0a0a0;
-    --bg: #16171d;
-    --bg-muted: #1f2028;
-    --border: #2e303a;
-  }
 }
 
 @media (max-width: 768px) {
@@ -43,9 +61,21 @@ body {
   margin: 0;
 }
 
+h1,
+h2,
+h3 {
+  font-family: "Bebas Neue", "Barlow", sans-serif;
+  letter-spacing: 0.02em;
+}
+
 button {
   font: inherit;
   cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 input {

@@ -19,8 +19,11 @@
   align-items: flex-start;
   gap: 10px;
   padding: 14px 16px;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  border-radius: var(--radius-sm);
+  /* Container shape only -- Section 9a's color coding is the PRD's own
+     semantic system (donation/referral/rank-drop meaning), not part of the
+     brand book's core palette, so those colors below are left untouched. */
+  box-shadow: var(--shadow-raised);
   animation: toast-in 0.15s ease-out;
 }
 

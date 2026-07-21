@@ -1,6 +1,7 @@
 .referral-card {
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
   padding: 20px;
 }
 
@@ -19,7 +20,7 @@
   min-width: 0;
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-muted);
   color: var(--text);
 }
@@ -27,5 +28,5 @@
 .referral-card__qr {
   display: block;
   margin: 12px auto 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }

@@ -1,8 +1,11 @@
 .funds-log {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 4px 16px;
   max-width: 640px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
 }
 
 .funds-log__item {
@@ -11,6 +14,10 @@
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
   font-size: 14px;
+}
+
+.funds-log__item:last-child {
+  border-bottom: none;
 }
 
 .funds-log__date {
