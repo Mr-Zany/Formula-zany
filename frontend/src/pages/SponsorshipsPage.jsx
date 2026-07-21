@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ContactModal from "../components/ContactModal";
+import GalleryImage from "../components/GalleryImage";
 import "./SponsorshipsPage.css";
 
 // Section 3: left image (text overlaid) -> contact button -> right image.
@@ -16,13 +17,16 @@ export default function SponsorshipsPage() {
       <Header />
 
       <main className="sponsorships-page">
-        <div className="sponsorships-page__image sponsorships-page__image--left">
+        <GalleryImage
+          category="sponsorship_left"
+          className="sponsorships-page__image sponsorships-page__image--left"
+        >
           <span className="sponsorships-page__overlay-text">
             Sponsor the build.
             <br />
             Be part of a genuine world first.
           </span>
-        </div>
+        </GalleryImage>
 
         <div className="sponsorships-page__center">
           <p>
@@ -34,7 +38,10 @@ export default function SponsorshipsPage() {
           </button>
         </div>
 
-        <div className="sponsorships-page__image sponsorships-page__image--right" />
+        <GalleryImage
+          category="sponsorship_right"
+          className="sponsorships-page__image sponsorships-page__image--right"
+        />
       </main>
 
       <Footer />

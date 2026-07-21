@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import FundsUpdate, VideoPost
+from .models import FundsUpdate, GalleryPhoto, VideoPost
 
 
 class VideoPostSerializer(serializers.ModelSerializer):
@@ -21,3 +21,9 @@ class FundsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FundsUpdate
         fields = ["id", "text", "created_at"]
+
+
+class GalleryPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GalleryPhoto
+        fields = ["id", "image", "category", "caption"]

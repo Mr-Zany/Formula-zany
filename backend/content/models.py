@@ -49,3 +49,27 @@ class FundsUpdate(models.Model):
 
     def __str__(self):
         return self.text[:60]
+
+
+class GalleryPhoto(models.Model):
+    """
+    Admin-uploadable photo pool for the site's placeholder image slots
+    (About Us bio/car photo, Sponsorships left/right image). `category` is
+    free text rather than fixed choices, so a new slot can be introduced
+    later without a migration -- today's values are "bio", "car",
+    "sponsorship_left", "sponsorship_right". Each frontend slot fetches its
+    own category and picks one photo at random client-side, so the page
+    looks different on every reload.
+    """
+
+    image = models.ImageField(upload_to="gallery/")
+    category = models.CharField(max_length=50)
+    caption = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order", "-created_at"]
+
+    def __str__(self):
+        return f"{self.category}: {self.caption or self.image.name}"

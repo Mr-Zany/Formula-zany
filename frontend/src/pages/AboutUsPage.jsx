@@ -4,6 +4,7 @@ import ProjectPlanStepper from "../components/ProjectPlanStepper";
 import VideoCarousel from "../components/VideoCarousel";
 import PartsListTable from "../components/PartsListTable";
 import FundsUpdatesLog from "../components/FundsUpdatesLog";
+import GalleryImage from "../components/GalleryImage";
 import "./AboutUsPage.css";
 
 const SOCIAL_LINKS = [
@@ -25,9 +26,7 @@ export default function AboutUsPage() {
       </div>
 
       <section className="about-section about-bio">
-        <div className="about-bio__photo" aria-hidden="true">
-          Photo
-        </div>
+        <GalleryImage category="bio" className="about-bio__photo" placeholder="Photo" />
         <div className="about-bio__text">
           <p>
             I'm Zane Little. I'm 15, going into my sophomore year. I know that's not very
@@ -56,9 +55,7 @@ export default function AboutUsPage() {
       </section>
 
       <section className="about-section about-car">
-        <div className="about-car__image" aria-hidden="true">
-          Car photo
-        </div>
+        <GalleryImage category="car" className="about-car__image" placeholder="Car photo" />
         <div className="about-car__text">
           <h2>Street-legal 2026 F1 car</h2>
           <p>
