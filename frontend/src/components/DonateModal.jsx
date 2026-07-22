@@ -5,6 +5,7 @@ import { useNotifications } from "../notifications/NotificationContext";
 import { getStoredReferralCode } from "../referral";
 import Modal from "./Modal";
 import AuthModal from "./AuthModal";
+import Tooltip from "./Tooltip";
 import "./DonateModal.css";
 
 const PRESET_AMOUNTS = [5, 20, 75, 150];
@@ -86,7 +87,14 @@ export default function DonateModal({ onClose }) {
           </div>
 
           <div className="modal-field">
-            <label htmlFor="donate-custom-amount">Custom amount (USD)</label>
+            <label htmlFor="donate-custom-amount">
+              Custom amount (USD){" "}
+              <Tooltip label={`Minimum donation is $${MIN_DOLLARS}`}>
+                <span className="donate-field-hint" tabIndex={0} role="note" aria-label={`Minimum donation is $${MIN_DOLLARS}`}>
+                  ⓘ
+                </span>
+              </Tooltip>
+            </label>
             <input
               id="donate-custom-amount"
               type="number"
@@ -114,7 +122,16 @@ export default function DonateModal({ onClose }) {
               disabled={!amountValid || submitting}
               onClick={handleContinue}
             >
-              {submitting ? "Loading..." : "Continue"}
+              {submitting ? (
+                "Loading..."
+              ) : (
+                <>
+                  <span className="donate-submit__flag" aria-hidden="true">
+                    {"\u{1F3C1}"}
+                  </span>
+                  {amountValid ? `Donate $${effectiveAmount}` : "Continue"}
+                </>
+              )}
             </button>
           </div>
         </div>

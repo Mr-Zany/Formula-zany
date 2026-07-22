@@ -19,14 +19,14 @@ export const NOTIFICATION_CONFIG = {
 
   rank_dropped_away: { color: "amber", dismiss: "persistent", gate: "away" },
   referral_catchup: { color: "purple", dismiss: "persistent", gate: "away" },
-  reached_gold_away: { color: "green", dismiss: "persistent", gate: "away" },
-  reached_top3_away: { color: "green", dismiss: "persistent", gate: "away" },
+  reached_gold_away: { color: "green", dismiss: "persistent", gate: "away", celebration: true },
+  reached_top3_away: { color: "green", dismiss: "persistent", gate: "away", celebration: true },
   moderation_takedown: { color: "red", dismiss: "persistent", gate: "never" },
 
   live_placement_drop: { color: "amber", dismiss: "timed", gate: "live" },
   live_referral_toast: { color: "purple", dismiss: "timed", gate: "live" },
-  reached_gold_live: { color: "green", dismiss: "timed", gate: "live" },
-  reached_top3_live: { color: "green", dismiss: "timed", gate: "live" },
+  reached_gold_live: { color: "green", dismiss: "timed", gate: "live", celebration: true },
+  reached_top3_live: { color: "green", dismiss: "timed", gate: "live", celebration: true },
   donation_received_up: { color: "blue", dismiss: "timed", gate: "live" },
   donation_received_same: { color: "blue", dismiss: "timed", gate: "live" },
 
@@ -37,6 +37,18 @@ export const NOTIFICATION_CONFIG = {
   password_reset_success: { color: "gray", dismiss: "timed", gate: "never" },
   password_reset_expired: { color: "red", dismiss: "timed", gate: "never" },
   donation_failed: { color: "red", dismiss: "timed", gate: "never" },
+};
+
+// Section 39 glyph prefixes -- rendered before the message text so the
+// color coding isn't the only signal (brand book's own accessibility rule,
+// same spirit as the PRD's own "never a color-only signal" note on errors).
+export const GLYPH = {
+  green: "●", // ●
+  amber: "▲", // ▲
+  red: "✕", // ✕
+  gray: "○", // ○
+  blue: "◆", // ◆
+  purple: "✦", // ✦
 };
 
 export const TIMED_DISMISS_MS = 7000;

@@ -1,0 +1,33 @@
+.share-modal__link-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.share-modal__link-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+.share-modal__icons {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.share-modal__icon-btn {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+}

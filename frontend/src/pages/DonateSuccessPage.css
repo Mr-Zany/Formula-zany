@@ -1,0 +1,49 @@
+.donate-success-page {
+  display: flex;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+.donate-success-page__card {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popped);
+  padding: 48px 40px;
+  text-align: center;
+  max-width: 440px;
+}
+
+.donate-success-page__badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--success);
+  color: #ffffff;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.donate-success-page__card h1 {
+  margin: 0 0 4px;
+}
+
+.donate-success-page__card p {
+  color: oklch(80% 0.01 60);
+  margin: 0 0 24px;
+}
+
+.donate-success-page__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.donate-success-page__actions .btn-secondary {
+  border-color: var(--paper);
+  color: var(--paper);
+  background: transparent;
+}

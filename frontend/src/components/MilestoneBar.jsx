@@ -33,6 +33,9 @@ export default function MilestoneBar({ totalRaisedCents, fundingGoalCents, loadi
 
       {fullyFunded ? (
         <div className="milestone-bar__fully-funded">
+          <span className="milestone-bar__flag" aria-hidden="true">
+            {"\u{1F3C1}"}
+          </span>
           Fully funded! Every dollar past this point is overflow support for the build.
         </div>
       ) : (

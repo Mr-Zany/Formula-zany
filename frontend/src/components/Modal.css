@@ -49,11 +49,19 @@
 .modal-field input[type="number"],
 .modal-field textarea {
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--text);
   font-family: inherit;
+  transition: border-color 0.1s ease;
+}
+
+/* Section 19: a filled field reads as more "committed" than an empty one --
+   darkens to the ink border once there's real content. */
+.modal-field input:not(:placeholder-shown),
+.modal-field textarea:not(:placeholder-shown) {
+  border-color: var(--ink);
 }
 
 .modal-field input:focus-visible,
@@ -99,6 +107,11 @@
   border-radius: var(--radius-md);
   font-weight: 600;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .btn-primary {

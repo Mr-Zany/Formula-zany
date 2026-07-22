@@ -20,11 +20,15 @@
   gap: 10px;
   padding: 14px 16px;
   border-radius: var(--radius-sm);
-  /* Container shape only -- Section 9a's color coding is the PRD's own
-     semantic system (donation/referral/rank-drop meaning), not part of the
-     brand book's core palette, so those colors below are left untouched. */
   box-shadow: var(--shadow-raised);
   animation: toast-in 0.15s ease-out;
+  position: relative;
+}
+
+.toast__glyph {
+  font-size: 14px;
+  line-height: 1.4;
+  flex-shrink: 0;
 }
 
 .toast__lines {
@@ -59,21 +63,22 @@
   opacity: 1;
 }
 
-/* Section 9a color coding. "Filled" variants use white/near-white text on a
-   solid background; "white background" variants keep the page background
-   with just the icon/border/text tinted. */
+/* Section 9a color coding, reconciled to Section 39's OKLCH bg/fg pairs.
+   "Filled" variants use white/near-white text on a solid background;
+   "neutral-outline" variants keep the page background with just the
+   icon/border/text tinted. */
 .toast--green {
-  background: #1b7a3d;
+  background: oklch(45% 0.13 145);
   color: #ffffff;
 }
 
 .toast--amber {
-  background: #b5730a;
-  color: #ffffff;
+  background: oklch(70% 0.15 75);
+  color: oklch(20% 0.02 75);
 }
 
 .toast--red {
-  background: #c81e1e;
+  background: var(--accent);
   color: #ffffff;
 }
 
@@ -84,15 +89,60 @@
 }
 
 .toast--blue {
-  background: var(--bg);
-  color: #2454c8;
-  border: 1px solid var(--border);
+  background: oklch(55% 0.15 250);
+  color: #ffffff;
 }
 
 .toast--purple {
-  background: var(--bg);
-  color: #7a2ec8;
-  border: 1px solid var(--border);
+  background: oklch(48% 0.18 305);
+  color: #ffffff;
+}
+
+/* Section 39: the one deliberately warmer/different animated variant,
+   reserved for Reached Gold/Top3. */
+.toast--celebration {
+  background: oklch(22% 0.04 260);
+  color: #ffffff;
+  animation: toast-in 0.15s ease-out, fz-gold-glow 2.4s ease-in-out infinite;
+}
+
+.toast__celebrate-chip {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  background: var(--focus-ring);
+  color: oklch(20% 0.02 75);
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  animation: fz-celebrate-chip 1.8s ease-out infinite;
+}
+
+@keyframes fz-gold-glow {
+  0%,
+  100% {
+    box-shadow: var(--shadow-raised), 0 0 0 0 color-mix(in srgb, var(--focus-ring) 55%, transparent);
+  }
+  50% {
+    box-shadow: var(--shadow-raised), 0 0 0 6px color-mix(in srgb, var(--focus-ring) 0%, transparent);
+  }
+}
+
+@keyframes fz-celebrate-chip {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-6px) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px) scale(1);
+    opacity: 0.85;
+  }
 }
 
 @keyframes toast-in {

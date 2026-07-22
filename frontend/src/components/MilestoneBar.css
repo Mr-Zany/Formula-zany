@@ -18,6 +18,34 @@
   padding: 12px;
   border-radius: var(--radius-sm);
   font-weight: 600;
+  animation: fz-funded-badge 0.6s ease;
+}
+
+.milestone-bar__flag {
+  display: inline-block;
+  margin-right: 6px;
+  animation: fz-funded-bar 2.4s ease-in-out infinite;
+}
+
+@keyframes fz-funded-badge {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fz-funded-bar {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .milestone-bar__track {

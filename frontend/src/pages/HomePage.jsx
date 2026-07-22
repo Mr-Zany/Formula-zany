@@ -44,6 +44,7 @@ export default function HomePage() {
           entries={leaderboard.data?.entries}
           loading={leaderboard.loading}
           error={leaderboard.error}
+          onDonateClick={() => setDonateOpen(true)}
         />
       </section>
 

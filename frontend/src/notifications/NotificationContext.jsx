@@ -84,7 +84,14 @@ export function NotificationProvider({ children }) {
     (entries) => {
       const id = nextId++;
       const dismiss = entries.some((e) => e.dismiss === "persistent") ? "persistent" : "timed";
-      const toast = { id, color: entries[0].color, dismiss, lines: entries.map((e) => e.message) };
+      const celebration = entries.some((e) => e.celebration);
+      const toast = {
+        id,
+        color: entries[0].color,
+        dismiss,
+        celebration,
+        lines: entries.map((e) => e.message),
+      };
       setToasts((prev) => [toast, ...prev]);
       if (dismiss === "timed") {
         timersRef.current[id] = setTimeout(() => dismissNotification(id), TIMED_DISMISS_MS);
@@ -103,7 +110,9 @@ export function NotificationProvider({ children }) {
       if (!config) return null;
       const message = resolveMessage(type, vars);
       if (!message) return null;
-      return addToast([{ color: config.color, dismiss: config.dismiss, message }]);
+      return addToast([
+        { color: config.color, dismiss: config.dismiss, celebration: config.celebration, message },
+      ]);
     },
     [user, addToast]
   );
@@ -122,10 +131,11 @@ export function NotificationProvider({ children }) {
         const message = resolveMessage(type, vars);
         if (!message) continue;
 
+        const entry = { color: config.color, dismiss: config.dismiss, celebration: config.celebration, message };
         if (COMBINABLE_AWAY_TYPES.has(type)) {
-          combinable.push({ color: config.color, dismiss: config.dismiss, message });
+          combinable.push(entry);
         } else {
-          addToast([{ color: config.color, dismiss: config.dismiss, message }]);
+          addToast([entry]);
         }
       }
       if (combinable.length) addToast(combinable);

@@ -1,0 +1,42 @@
+.not-found-page {
+  display: flex;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+.not-found-page__card {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-popped);
+  padding: 48px 40px;
+  text-align: center;
+  max-width: 440px;
+}
+
+.not-found-page__code {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 72px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.not-found-page__card h1 {
+  margin: 8px 0 4px;
+}
+
+.not-found-page__card p {
+  color: oklch(80% 0.01 60);
+  margin: 0 0 20px;
+}
+
+.btn-secondary.not-found-page__cta {
+  border-color: var(--paper);
+  color: var(--paper);
+  background: transparent;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

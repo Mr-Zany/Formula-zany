@@ -41,13 +41,20 @@ export default function Footer() {
         </div>
       </div>
 
-      <p className="site-footer__oversight">
-        Funds are held and managed by [LLC name — to be formed], with parental oversight.
-      </p>
-      <p className="site-footer__disclaimer">
-        Formula Zany is not affiliated with, endorsed by, or sponsored by Formula 1, FIA, or
-        Formula One Group in any way, shape, or form.
-      </p>
+      <div className="site-footer__legal">
+        <p className="site-footer__oversight">
+          Funds are held and managed by [LLC name — to be formed], with parental oversight.
+        </p>
+        <p className="site-footer__disclaimer">
+          Formula Zany is not affiliated with, endorsed by, or sponsored by Formula 1, FIA, or
+          Formula One Group in any way, shape, or form.
+        </p>
+      </div>
+
+      <div className="site-footer__bottom-bar">
+        <span>&copy; {new Date().getFullYear()} Formula Zany</span>
+        <span className="site-footer__tagline">Built not bought.</span>
+      </div>
 
       {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
     </footer>

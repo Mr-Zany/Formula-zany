@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ApiError } from "../api/client";
+import { apiFetch, ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useNotifications } from "../notifications/NotificationContext";
 import Modal from "./Modal";
@@ -25,6 +25,10 @@ export default function ProfileSettingsModal({ onClose }) {
   const [nameSaving, setNameSaving] = useState(false);
 
   const [toggleMsg, setToggleMsg] = useState(null);
+
+  const [changePwSubmitting, setChangePwSubmitting] = useState(false);
+  const [changePwSent, setChangePwSent] = useState(false);
+  const [changePwError, setChangePwError] = useState(null);
 
   async function handleSaveFullName(event) {
     event.preventDefault();
@@ -81,6 +85,26 @@ export default function ProfileSettingsModal({ onClose }) {
     }
   }
 
+  async function handleChangePassword() {
+    setChangePwError(null);
+    setChangePwSubmitting(true);
+    try {
+      // Reuses the existing public password-reset-by-email flow (same
+      // endpoint AuthModal's "Forgot password" view calls) rather than a
+      // new authenticated old-password-verification endpoint.
+      await apiFetch("/auth/password-reset/", {
+        method: "POST",
+        body: { email: user.email },
+        auth: false,
+      });
+      setChangePwSent(true);
+    } catch (err) {
+      setChangePwError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setChangePwSubmitting(false);
+    }
+  }
+
   function handleLogoutConfirmed() {
     logout();
     pushNotification("sign_out");
@@ -97,17 +121,17 @@ export default function ProfileSettingsModal({ onClose }) {
       </h2>
 
       <div className="ps-avatar-row">
-        <div className="ps-avatar">
+        <button
+          type="button"
+          className="ps-avatar"
+          aria-label="Change profile picture"
+          onClick={() => setPhotoEditorOpen(true)}
+        >
           {avatarSrc ? <img src={avatarSrc} alt="" /> : <span>{initial}</span>}
-          <button
-            type="button"
-            className="ps-avatar__pencil"
-            aria-label="Change profile picture"
-            onClick={() => setPhotoEditorOpen(true)}
-          >
-            ✎
-          </button>
-        </div>
+          <span className="ps-avatar__hover" aria-hidden="true">
+            {"\u{1F4F7}"}
+          </span>
+        </button>
       </div>
 
       <form onSubmit={handleSaveFullName} className="ps-section">
@@ -157,41 +181,64 @@ export default function ProfileSettingsModal({ onClose }) {
         <h3 className="ps-section__title">Notification settings</h3>
         {toggleMsg && <div className={`modal-message ${toggleMsg.type}`}>{toggleMsg.text}</div>}
 
-        <label className="modal-checkbox">
+        <label className="ps-toggle">
+          <span>Disable live notifications</span>
           <input
             type="checkbox"
             checked={user.disable_live_notifications}
             disabled={user.disable_all_notifications}
             onChange={(e) => handleToggle("disable_live_notifications", e.target.checked)}
           />
-          <span>Disable live notifications</span>
+          <span className="ps-toggle__track" aria-hidden="true" />
         </label>
-        <label className="modal-checkbox">
+        <label className="ps-toggle">
+          <span>Disable away notifications</span>
           <input
             type="checkbox"
             checked={user.disable_away_notifications}
             disabled={user.disable_all_notifications}
             onChange={(e) => handleToggle("disable_away_notifications", e.target.checked)}
           />
-          <span>Disable away notifications</span>
+          <span className="ps-toggle__track" aria-hidden="true" />
         </label>
-        <label className="modal-checkbox">
+        <label className="ps-toggle">
+          <span>Disable all notifications</span>
           <input
             type="checkbox"
             checked={user.disable_all_notifications}
             onChange={(e) => handleToggle("disable_all_notifications", e.target.checked)}
           />
-          <span>Disable all notifications</span>
+          <span className="ps-toggle__track" aria-hidden="true" />
         </label>
 
-        <label className="modal-checkbox">
+        <label className="ps-toggle">
+          <span>Email me updates and personalized ranking notifications</span>
           <input
             type="checkbox"
             checked={user.newsletter_opt_in}
             onChange={(e) => handleToggle("newsletter_opt_in", e.target.checked)}
           />
-          <span>Email me updates and personalized ranking notifications</span>
+          <span className="ps-toggle__track" aria-hidden="true" />
         </label>
+      </div>
+
+      <div className="ps-section">
+        <h3 className="ps-section__title">Password</h3>
+        {changePwError && <div className="modal-message error">{changePwError}</div>}
+        {changePwSent ? (
+          <div className="modal-message success">
+            If an account exists for that email, a reset link has been sent.
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={changePwSubmitting}
+            onClick={handleChangePassword}
+          >
+            {changePwSubmitting ? "Sending..." : "Change Password"}
+          </button>
+        )}
       </div>
 
       <div className="ps-section ps-logout-row">

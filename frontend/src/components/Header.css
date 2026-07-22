@@ -3,7 +3,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 24px;
-  border-bottom: 1px solid var(--border);
+  background: var(--ink);
+  border-bottom: 3px solid var(--accent);
 }
 
 .site-header__nav {
@@ -13,8 +14,24 @@
 
 .site-header__nav a {
   text-decoration: none;
-  color: var(--text);
-  font-weight: 500;
+  color: oklch(75% 0.01 60);
+  font-weight: 600;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.site-header__nav a:hover {
+  color: var(--paper);
+}
+
+.site-header__nav a.is-active {
+  color: var(--paper);
+  border-bottom-color: var(--accent);
 }
 
 .login-button {
@@ -27,7 +44,7 @@
   height: 36px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 2px solid var(--paper);
   padding: 0;
   background: var(--bg-muted);
   display: flex;

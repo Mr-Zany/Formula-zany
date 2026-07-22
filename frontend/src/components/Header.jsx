@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import AuthModal from "./AuthModal";
 import ProfileSettingsModal from "./ProfileSettingsModal";
 import "./Header.css";
 
+const NAV_LINKS = [
+  { to: "/", label: "Home" },
+  { to: "/about-us", label: "About Us" },
+  { to: "/sponsorships", label: "Sponsorships" },
+];
+
 // Section 5a.
 export default function Header() {
   const { user, loading } = useAuth();
+  const { pathname } = useLocation();
   const [authOpen, setAuthOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -19,9 +26,15 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="site-header__nav">
-        <Link to="/">Home</Link>
-        <Link to="/about-us">About Us</Link>
-        <Link to="/sponsorships">Sponsorships</Link>
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.to}
+            to={link.to}
+            className={pathname === link.to ? "is-active" : undefined}
+          >
+            {link.label}
+          </Link>
+        ))}
       </div>
 
       <div className="site-header__account">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useAuth } from "../auth/AuthContext";
 import AuthModal from "./AuthModal";
+import ShareModal from "./ShareModal";
 import "./ReferralCard.css";
 
 // Section 8. Visible to everyone, signed in or not -- a referral code only
@@ -12,6 +13,7 @@ import "./ReferralCard.css";
 export default function ReferralCard() {
   const { user } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -31,9 +33,11 @@ export default function ReferralCard() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const isUnverified = user && !user.email_verified;
+
   return (
-    <div className="referral-card">
-      <h3>Refer a friend</h3>
+    <div className={`referral-card ${isUnverified ? "referral-card--unverified" : ""}`}>
+      <h3>{isUnverified ? "Verify to activate" : "Refer a friend"}</h3>
 
       {!user ? (
         <>
@@ -42,8 +46,10 @@ export default function ReferralCard() {
             Sign Up
           </button>
         </>
-      ) : !user.email_verified ? (
-        <p>Verify your email to activate your referral link.</p>
+      ) : isUnverified ? (
+        <div className="referral-card__notice">
+          Verify your email to activate your referral link and start earning points.
+        </div>
       ) : (
         <>
           <p>Share your link -- you earn 5 points every time someone you refer actually donates.</p>
@@ -53,11 +59,15 @@ export default function ReferralCard() {
               {copied ? "Copied!" : "Copy link"}
             </button>
           </div>
+          <button type="button" className="btn-primary referral-card__share-btn" onClick={() => setShareOpen(true)}>
+            Share
+          </button>
           {qrDataUrl && <img className="referral-card__qr" src={qrDataUrl} alt="QR code for your referral link" />}
         </>
       )}
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {shareOpen && <ShareModal referralUrl={referralUrl} onClose={() => setShareOpen(false)} />}
     </div>
   );
 }

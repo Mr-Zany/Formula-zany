@@ -7,15 +7,26 @@
 
 .donate-amount-chip {
   padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--ink);
   background: var(--bg);
   color: var(--text);
   font-weight: 600;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .donate-amount-chip.is-selected {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.donate-submit__flag {
+  margin-right: 6px;
+}
+
+.donate-field-hint {
+  display: inline-block;
+  color: var(--text-muted);
+  cursor: help;
 }
