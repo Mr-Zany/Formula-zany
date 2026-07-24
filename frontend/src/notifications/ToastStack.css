@@ -19,7 +19,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 14px 16px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-soft);
   box-shadow: var(--shadow-raised);
   animation: toast-in 0.15s ease-out;
   position: relative;
@@ -99,10 +99,14 @@
 }
 
 /* Section 39: the one deliberately warmer/different animated variant,
-   reserved for Reached Gold/Top3. */
+   reserved for Reached Gold/Top3 -- also one of the few spots that keeps
+   the hard "slammed" shadow instead of the default soft one, since this is
+   a genuinely celebratory, attention-grabbing moment. */
 .toast--celebration {
   background: oklch(22% 0.04 260);
   color: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popped);
   animation: toast-in 0.15s ease-out, fz-gold-glow 2.4s ease-in-out infinite;
 }
 
@@ -123,10 +127,10 @@
 @keyframes fz-gold-glow {
   0%,
   100% {
-    box-shadow: var(--shadow-raised), 0 0 0 0 color-mix(in srgb, var(--focus-ring) 55%, transparent);
+    box-shadow: var(--shadow-popped), 0 0 0 0 color-mix(in srgb, var(--focus-ring) 55%, transparent);
   }
   50% {
-    box-shadow: var(--shadow-raised), 0 0 0 6px color-mix(in srgb, var(--focus-ring) 0%, transparent);
+    box-shadow: var(--shadow-popped), 0 0 0 6px color-mix(in srgb, var(--focus-ring) 0%, transparent);
   }
 }
 

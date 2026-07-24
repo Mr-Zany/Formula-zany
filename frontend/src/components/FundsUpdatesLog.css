@@ -3,8 +3,8 @@
   margin: 0;
   padding: 4px 16px;
   max-width: 640px;
-  border: 2px solid var(--ink);
-  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-soft);
   box-shadow: var(--shadow-raised);
 }
 

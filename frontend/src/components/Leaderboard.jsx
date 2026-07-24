@@ -137,12 +137,14 @@ export default function Leaderboard({ entries, loading, error, onDonateClick }) 
           aria-label="Search leaderboard by name"
         />
 
-        <div className="leaderboard-chips" role="group" aria-label="Filter by tier">
+        <div className="leaderboard-tabs" role="tablist" aria-label="Filter by tier">
           {TIER_FILTERS.map((f) => (
             <button
               key={f.value}
               type="button"
-              className={`leaderboard-chip leaderboard-chip--${f.value} ${tierFilter === f.value ? "is-active" : ""}`}
+              role="tab"
+              aria-selected={tierFilter === f.value}
+              className={`leaderboard-tab leaderboard-tab--${f.value} ${tierFilter === f.value ? "is-active" : ""}`}
               onClick={() => setTierFilter(f.value)}
             >
               {f.label}
@@ -150,18 +152,18 @@ export default function Leaderboard({ entries, loading, error, onDonateClick }) 
           ))}
         </div>
 
-        <div className="leaderboard-chips" role="group" aria-label="Sort leaderboard">
+        <select
+          className="leaderboard-sort-select"
+          value={sortMode}
+          onChange={(e) => setSortMode(e.target.value)}
+          aria-label="Sort leaderboard"
+        >
           {SORT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`leaderboard-chip ${sortMode === opt.value ? "is-active" : ""}`}
-              onClick={() => setSortMode(opt.value)}
-            >
-              {opt.label}
-            </button>
+            <option key={opt.value} value={opt.value}>
+              Sort: {opt.label}
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
       <div className="leaderboard" ref={scrollRef}>

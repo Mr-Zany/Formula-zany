@@ -26,13 +26,24 @@
   --space-6: 32px;
   --space-7: 48px;
 
-  /* Section 09/10 -- "stamped/hard" corners, not soft/rounded */
+  /* Section 09/10's sharp "stamped" 2px/4px corners are now reserved for the
+     short list of elements that keep the hard slammed shadow below (modals,
+     primary buttons, celebratory moments) -- everything else uses the new
+     softer radius so it doesn't look wrong next to a blurred shadow. */
   --radius-sm: 2px;
   --radius-md: 4px;
+  --radius-soft: 10px;
   --radius-pill: 20px;
+  --border-width: 1px;
 
-  /* Section 11 -- Elevation: hard offset shadows, no blur */
-  --shadow-raised: 3px 3px 0 var(--ink);
+  /* Elevation, two tiers on purpose:
+     --shadow-raised is the new default -- a real blurred soft shadow, used
+     almost everywhere (cards, rows, secondary buttons, chips).
+     --shadow-popped keeps the original hard offset "slammed" shadow from
+     Section 11, but is now deliberately reserved for a short list of
+     high-emphasis moments (modals, primary CTA buttons, celebratory states)
+     instead of being the default -- overusing it is what read as "AI slop." */
+  --shadow-raised: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-popped: 6px 6px 0 var(--accent);
 
   /* Edge margin for full-bleed elements (milestone bar, leaderboard):
@@ -44,7 +55,6 @@
   line-height: 1.5;
   color-scheme: light;
   color: var(--text);
-  background: var(--bg);
 }
 
 @media (max-width: 768px) {
@@ -59,6 +69,11 @@
 
 body {
   margin: 0;
+  /* A very subtle top-to-bottom gradient instead of one flat page color --
+     no `background-attachment: fixed` (that produces a visible seam at the
+     one-viewport-height mark on tall pages); this scrolls normally and
+     spans the full document height since body's height is auto/content. */
+  background: linear-gradient(180deg, oklch(97% 0.008 70), oklch(94% 0.014 65));
 }
 
 h1,

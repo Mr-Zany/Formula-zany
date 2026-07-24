@@ -1,6 +1,6 @@
 .referral-card {
-  border: 2px solid var(--ink);
-  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-soft);
   box-shadow: var(--shadow-raised);
   padding: 20px;
 }
@@ -20,7 +20,7 @@
   min-width: 0;
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-soft);
   background: var(--bg-muted);
   color: var(--text);
 }
@@ -41,8 +41,8 @@
 }
 
 .referral-card__notice {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-soft);
   padding: 12px 14px;
   font-size: 14px;
   color: var(--text-muted);

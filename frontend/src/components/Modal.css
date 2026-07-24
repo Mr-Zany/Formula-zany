@@ -49,8 +49,8 @@
 .modal-field input[type="number"],
 .modal-field textarea {
   padding: 10px 12px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-soft);
   background: var(--bg);
   color: var(--text);
   font-family: inherit;
@@ -93,18 +93,17 @@
   margin-top: 18px;
 }
 
-/* Brand Book Section 10/11: buttons "press into" their own hard shadow --
-   the shadow shrinks to nothing and the button slides to meet it. Only the
-   primary (Donate-style) button also deepens hue on press; secondary/
-   utility buttons compress the same way but keep their own color and use a
-   thinner border + smaller shadow, per the book's own distinction between
-   the two. Disabled goes fully grayscale rather than dimmed opacity, "so it
-   reads as truly inert." */
+/* The hard "press into own shadow" slam is now reserved for the primary
+   (Donate-style) button only -- the site's one deliberate bold interaction,
+   kept because it's genuinely liked, just no longer the default everywhere.
+   Secondary/utility buttons use the new soft elevation language instead:
+   a thin border, blurred shadow, and a conventional hover-lift/press-down
+   instead of a slam. Disabled goes fully grayscale rather than dimmed
+   opacity, "so it reads as truly inert." */
 .btn-primary,
 .btn-secondary {
   flex: 1;
   padding: 13px 16px;
-  border-radius: var(--radius-md);
   font-weight: 600;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
   text-decoration: none;
@@ -116,27 +115,36 @@
 
 .btn-primary {
   border: 3px solid var(--ink);
-  box-shadow: var(--shadow-raised);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popped);
   background: var(--accent);
   color: var(--accent-contrast);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translate(3px, 3px);
+  transform: translate(4px, 4px);
   box-shadow: 0 0 0 var(--ink);
   background: var(--accent-press);
 }
 
 .btn-secondary {
-  border: 2px solid var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
-  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-soft);
+  box-shadow: var(--shadow-raised);
+  background: var(--bg);
   color: var(--text);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease, border-color 0.1s ease;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--ink);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .btn-secondary:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 0 0 0 var(--ink);
+  transform: translateY(0);
+  box-shadow: var(--shadow-raised);
 }
 
 .btn-primary:disabled,
